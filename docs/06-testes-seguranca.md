@@ -67,7 +67,7 @@ privilégio mínimo, mensagens de erro genéricas e camada extra (filtro de padr
 
 ## 7. Resiliência e métricas (RT-22/23 · C7)
 
-- **Teste de caos**: WAN (fibra+4G) fora por ≥30 min; as 5 bordas seguiram operando, alarme crítico
+- **Teste de caos**: WAN (fibra+4G) fora por >=30 min; as 5 bordas seguiram operando, alarme crítico
   da câmara fria disparou **sem nuvem**, reconciliação sem perda e sem duplicação ao voltar.
 - **Métricas**: disponibilidade, MTTD/MTTR, tempo de operação autônoma, consumo de CPU/memória/banda
   do nó de borda. Ver `docs/evidencias/caos/` e `metrics/out/`.

@@ -10,15 +10,15 @@ consolidador — não um ponto único de falha. Foi essa dependência da nuvem q
 deixou a câmara fria de vacinas sem alarme quando a fibra caiu.
 
 ```
-  CAMPO                 BORDA (1 por espaço)           NUVEM                     SUPERVISÃO
- ┌─────────┐  MQTT     ┌────────────────────┐  WireGuard  ┌─────────────┐        ┌──────────────┐
- │ sensores│  mTLS     │ broker local       │   (mTLS)    │ ingest (mTLS)│        │ painel web   │
- │ atuadores├─────────►│ regras locais      ├────────────►│ PostgreSQL   │◄───────┤ (MFA+RBAC)   │
- │ fechadura│  TLS 1.3 │ store-and-forward  │  fibra / 4G │ SOAR · IA    │  VPN   │ console SOC  │
- └─────────┘  cert/dev │ painel local       │             │ SIEM (Wazuh) │  admin └──────────────┘
-                       └────────────────────┘             └─────────────┘        (só via VPN+MFA)
-   cert X.509            cert X.509 por nó                  CA própria             WireGuard + TOTP
-   por dispositivo       intertravamentos                  menor privilégio
+  CAMPO              BORDA (1 por espaco)          NUVEM                 SUPERVISAO
+ +-----------+      +--------------------+       +---------------+     +--------------+
+ | sensores  | MQTT | broker local       |  WG   | ingest (mTLS) |     | painel web   |
+ | atuadores |mTLS  | regras locais      | mTLS  | PostgreSQL    |     | (MFA + RBAC) |
+ | fechadura |=====>| store-and-forward  |======>| SOAR . IA     |<====| console SOC  |
+ +-----------+ TLS  | painel local       | fibra | SIEM (Wazuh)  | VPN +--------------+
+   cert X.509       +--------------------+  / 4G  +---------------+ adm  so via VPN+MFA
+   por dispositivo   cert X.509 por no            CA propria           WireGuard + TOTP
+                     intertravamentos             menor privilegio
 ```
 
 Cada seta é autenticada com certificado em ambas as pontas (mTLS); nenhuma porta administrativa

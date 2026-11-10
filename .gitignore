@@ -28,3 +28,4 @@ __pycache__/
 .DS_Store
 phishing/out/
 forensics/cases/*/volateis-*/05-ambiente-*.txt
+entrega/
