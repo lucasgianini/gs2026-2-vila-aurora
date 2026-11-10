@@ -2,7 +2,7 @@
 SITES := centro escola ubs horta abrigo
 SHELL := /bin/bash
 
-.PHONY: help bootstrap dirs up down logs ps status clean
+.PHONY: help bootstrap dirs up down logs ps status clean legado-users
 
 help:
 	@grep -E '^[a-z-]+:.*##' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -10,7 +10,11 @@ help:
 bootstrap: ## gera segredos (.env), PKI completa e diretórios de dados
 	scripts/gen-secrets.sh
 	pki/pki.sh bootstrap
+	vpn/gen.sh
 	$(MAKE) dirs
+
+legado-users: ## (após o 1º up) usuários da VPN legada = senhas do painel (reuso de credencial)
+	scripts/legado-users.sh
 
 dirs:
 	@mkdir -p data/control data/cloud/db data/cloud/logs/pg secrets $(foreach s,$(SITES),data/$(s)/broker data/$(s)/edge data/$(s)/logs)
@@ -35,3 +39,6 @@ status: ## status das bordas (painéis locais)
 clean: ## APAGA dados de runtime (não apaga PKI)
 	docker compose down -v
 	rm -rf data
+
+restart-hub: ## reinicia o hub VPN e os gateways que vivem no namespace de rede dele
+	docker compose restart vpn-hub && sleep 3 && docker compose restart ingest-gw painel-gw

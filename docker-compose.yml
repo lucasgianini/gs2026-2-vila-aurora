@@ -1,40 +1,46 @@
 # Rede Comunitária Vila Aurora — laboratório (E2)
-# Camadas: campo (devices-*) -> borda (broker-*, edge-*) -> nuvem (cloud/*) -> supervisão (painel, SIEM)
-# Cada rede Docker é um segmento (RT-07). Redes iot_* são internas: sem rota para fora.
+# Camadas: campo (devices-*) -> borda (broker-*, wg-*, edge-*) -> nuvem (vpn-hub, ingest, db, painel)
+#          -> supervisão (painel via VPN admin, SIEM).
+# Cada rede Docker é um segmento (RT-07). Bordas só falam com a nuvem por WireGuard (RT-06).
 name: vilaaurora
 
-x-broker: &broker
-  image: eclipse-mosquitto:2.0.20
-  user: "${UID:-1000}:${GID:-1000}"
-  restart: unless-stopped
-  read_only: true
-  cap_drop: [ALL]
-  security_opt: [no-new-privileges:true]
-
-x-devices: &devices
-  build: ./sites
-  image: vilaaurora/site:dev
-  command: ["python", "devices/sim.py"]
-  restart: unless-stopped
-  read_only: true
-  cap_drop: [ALL]
-  security_opt: [no-new-privileges:true]
-
-x-edge: &edge
-  image: vilaaurora/site:dev
-  command: ["python", "edge-agent/edge.py"]
+x-hard: &hard
   restart: unless-stopped
   read_only: true
   tmpfs: [/tmp]
   cap_drop: [ALL]
   security_opt: [no-new-privileges:true]
+
+x-broker: &broker
+  <<: *hard
+  image: eclipse-mosquitto:2.0.20
+  user: "${UID:-1000}:${GID:-1000}"
+
+x-devices: &devices
+  <<: *hard
+  build: ./sites
+  image: vilaaurora/site:dev
+  command: ["python", "devices/sim.py"]
+
+x-wg: &wg
+  build: ./vpn
+  image: vilaaurora/vpn:dev
+  restart: unless-stopped
+  cap_drop: [ALL]
+  cap_add: [NET_ADMIN]
+  command: ["/opt/edge/entrypoint.sh"]
+
+x-edge: &edge
+  <<: *hard
+  image: vilaaurora/site:dev
+  command: ["python", "edge-agent/edge.py"]
   environment: &edge-env
     PSEUDO_KEY: ${PSEUDO_KEY:?rode scripts/gen-secrets.sh}
-    UPLINKS: "fibra=https://ingest-fibra:8443,4g=https://ingest-4g:8443"
+    UPLINKS: "fibra=https://10.80.0.1:8443,4g=https://10.81.0.1:8443"
     TZ: America/Sao_Paulo
 
 services:
-  # ------------------------------------------------------------------ CENTRO COMUNITÁRIO
+  # ------------------------------------------------------------------ CENTRO
   broker-centro:
     <<: *broker
     networks: [iot_centro]
@@ -50,15 +56,21 @@ services:
     environment: {SITE: centro, DEVICES: "energia fechadura qualidade-ar"}
     networks: [iot_centro]
     volumes: ["./pki/out/certs:/certs:ro", "./data/control:/control:ro"]
+  wg-centro:
+    <<: *wg
+    environment: {SITE: centro}
+    networks: [iot_centro, lan_centro, wan_fibra, wan_4g]
+    ports: ["127.0.0.1:8081:8080"]     # painel local, só pela LAN do espaço
+    volumes: ["./vpn/out/edge-centro-fibra.conf:/vpn/edge-centro-fibra.conf:ro", "./vpn/out/edge-centro-4g.conf:/vpn/edge-centro-4g.conf:ro"]
   edge-centro:
     <<: *edge
     environment: {<<: *edge-env, SITE: centro}
-    networks: [iot_centro, lan_centro, wan_fibra, wan_4g]
-    ports: ["127.0.0.1:8081:8080"]
+    network_mode: service:wg-centro
+    depends_on: [wg-centro]
     volumes: ["./pki/out/certs/edge-centro:/certs/edge-centro:ro", "./pki/out/crl.pem:/crl/crl.pem:ro",
               "./data/centro/edge:/data", "./data/centro/logs:/var/log/vilaaurora"]
 
-  # ------------------------------------------------------------------ ESCOLA MUNICIPAL
+  # ------------------------------------------------------------------ ESCOLA
   broker-escola:
     <<: *broker
     networks: [iot_escola]
@@ -74,11 +86,17 @@ services:
     environment: {SITE: escola, DEVICES: "nivel-reservatorio bomba turbidez cloro fechadura"}
     networks: [iot_escola]
     volumes: ["./pki/out/certs:/certs:ro", "./data/control:/control:ro"]
+  wg-escola:
+    <<: *wg
+    environment: {SITE: escola}
+    networks: [iot_escola, lan_escola, wan_fibra, wan_4g]
+    ports: ["127.0.0.1:8082:8080"]     # painel local, só pela LAN do espaço
+    volumes: ["./vpn/out/edge-escola-fibra.conf:/vpn/edge-escola-fibra.conf:ro", "./vpn/out/edge-escola-4g.conf:/vpn/edge-escola-4g.conf:ro"]
   edge-escola:
     <<: *edge
     environment: {<<: *edge-env, SITE: escola}
-    networks: [iot_escola, lan_escola, wan_fibra, wan_4g]
-    ports: ["127.0.0.1:8082:8080"]
+    network_mode: service:wg-escola
+    depends_on: [wg-escola]
     volumes: ["./pki/out/certs/edge-escola:/certs/edge-escola:ro", "./pki/out/crl.pem:/crl/crl.pem:ro",
               "./data/escola/edge:/data", "./data/escola/logs:/var/log/vilaaurora"]
 
@@ -98,15 +116,21 @@ services:
     environment: {SITE: ubs, DEVICES: "camara-fria fechadura energia"}
     networks: [iot_ubs]
     volumes: ["./pki/out/certs:/certs:ro", "./data/control:/control:ro"]
+  wg-ubs:
+    <<: *wg
+    environment: {SITE: ubs}
+    networks: [iot_ubs, lan_ubs, wan_fibra, wan_4g]
+    ports: ["127.0.0.1:8083:8080"]     # painel local, só pela LAN do espaço
+    volumes: ["./vpn/out/edge-ubs-fibra.conf:/vpn/edge-ubs-fibra.conf:ro", "./vpn/out/edge-ubs-4g.conf:/vpn/edge-ubs-4g.conf:ro"]
   edge-ubs:
     <<: *edge
     environment: {<<: *edge-env, SITE: ubs}
-    networks: [iot_ubs, lan_ubs, wan_fibra, wan_4g]
-    ports: ["127.0.0.1:8083:8080"]
+    network_mode: service:wg-ubs
+    depends_on: [wg-ubs]
     volumes: ["./pki/out/certs/edge-ubs:/certs/edge-ubs:ro", "./pki/out/crl.pem:/crl/crl.pem:ro",
               "./data/ubs/edge:/data", "./data/ubs/logs:/var/log/vilaaurora"]
 
-  # ------------------------------------------------------------------ HORTA E COZINHA
+  # ------------------------------------------------------------------ HORTA
   broker-horta:
     <<: *broker
     networks: [iot_horta]
@@ -122,15 +146,21 @@ services:
     environment: {SITE: horta, DEVICES: "nivel-reservatorio bomba umidade-solo"}
     networks: [iot_horta]
     volumes: ["./pki/out/certs:/certs:ro", "./data/control:/control:ro"]
+  wg-horta:
+    <<: *wg
+    environment: {SITE: horta}
+    networks: [iot_horta, lan_horta, wan_fibra, wan_4g]
+    ports: ["127.0.0.1:8084:8080"]     # painel local, só pela LAN do espaço
+    volumes: ["./vpn/out/edge-horta-fibra.conf:/vpn/edge-horta-fibra.conf:ro", "./vpn/out/edge-horta-4g.conf:/vpn/edge-horta-4g.conf:ro"]
   edge-horta:
     <<: *edge
     environment: {<<: *edge-env, SITE: horta}
-    networks: [iot_horta, lan_horta, wan_fibra, wan_4g]
-    ports: ["127.0.0.1:8084:8080"]
+    network_mode: service:wg-horta
+    depends_on: [wg-horta]
     volumes: ["./pki/out/certs/edge-horta:/certs/edge-horta:ro", "./pki/out/crl.pem:/crl/crl.pem:ro",
               "./data/horta/edge:/data", "./data/horta/logs:/var/log/vilaaurora"]
 
-  # ------------------------------------------------------------------ ABRIGO DE EMERGÊNCIA
+  # ------------------------------------------------------------------ ABRIGO
   broker-abrigo:
     <<: *broker
     networks: [iot_abrigo]
@@ -146,15 +176,46 @@ services:
     environment: {SITE: abrigo, DEVICES: "alagamento energia gerador fechadura"}
     networks: [iot_abrigo]
     volumes: ["./pki/out/certs:/certs:ro", "./data/control:/control:ro"]
+  wg-abrigo:
+    <<: *wg
+    environment: {SITE: abrigo}
+    networks: [iot_abrigo, lan_abrigo, wan_fibra, wan_4g]
+    ports: ["127.0.0.1:8085:8080"]     # painel local, só pela LAN do espaço
+    volumes: ["./vpn/out/edge-abrigo-fibra.conf:/vpn/edge-abrigo-fibra.conf:ro", "./vpn/out/edge-abrigo-4g.conf:/vpn/edge-abrigo-4g.conf:ro"]
   edge-abrigo:
     <<: *edge
     environment: {<<: *edge-env, SITE: abrigo}
-    networks: [iot_abrigo, lan_abrigo, wan_fibra, wan_4g]
-    ports: ["127.0.0.1:8085:8080"]
+    network_mode: service:wg-abrigo
+    depends_on: [wg-abrigo]
     volumes: ["./pki/out/certs/edge-abrigo:/certs/edge-abrigo:ro", "./pki/out/crl.pem:/crl/crl.pem:ro",
               "./data/abrigo/edge:/data", "./data/abrigo/logs:/var/log/vilaaurora"]
 
   # ================================================================== NUVEM
+  vpn-hub:
+    image: vilaaurora/vpn:dev
+    build: ./vpn
+    restart: unless-stopped
+    cap_drop: [ALL]
+    cap_add: [NET_ADMIN, DAC_OVERRIDE]   # DAC: ler chave/gravar log de dono uid 1000
+    command: ["/opt/hub/entrypoint.sh"]
+    sysctls:
+      net.ipv4.ip_forward: 1
+      net.ipv4.ip_unprivileged_port_start: 0
+    networks:
+      wan_fibra: {ipv4_address: 172.30.10.2}
+      wan_4g:    {ipv4_address: 172.30.20.2}
+      internet:  {ipv4_address: 172.30.99.2}
+      cloud_svc: {ipv4_address: 172.30.30.2}
+      admin:     {ipv4_address: 172.30.40.2}
+    volumes:
+      - ./vpn/out/hub-wg0.conf:/vpn/hub-wg0.conf:ro
+      - ./vpn/out/hub-wg1.conf:/vpn/hub-wg1.conf:ro
+      - ./vpn/out/hub-wg2.conf:/vpn/hub-wg2.conf:ro
+      - ./vpn/out/peers.json:/vpn/peers.json:ro
+      - ./vpn/out/admins.tsv:/vpn/admins.tsv:ro
+      - ./pki/out/certs/vpn-hub:/certs:ro
+      - ./data/cloud/logs:/var/log/vilaaurora
+
   db:
     image: postgres:16.6-alpine
     user: "${UID:-1000}:${GID:-1000}"
@@ -168,8 +229,7 @@ services:
       DB_PAINEL_VULN_PASSWORD: ${DB_PAINEL_VULN_PASSWORD}
     command: ["postgres", "-c", "logging_collector=on", "-c", "log_destination=jsonlog",
               "-c", "log_directory=/var/log/vilaaurora/pg", "-c", "log_filename=postgresql.log",
-              "-c", "log_connections=on", "-c", "log_disconnections=on", "-c", "log_line_prefix=%m %u@%d %a ",
-              "-c", "log_timezone=UTC"]
+              "-c", "log_connections=on", "-c", "log_disconnections=on", "-c", "log_timezone=UTC"]
     volumes:
       - ./cloud/db/init:/docker-entrypoint-initdb.d:ro
       - ./data/cloud/db:/var/lib/postgresql/data
@@ -193,44 +253,31 @@ services:
     restart: "no"
 
   ingest-app:
+    <<: *hard
     build: ./cloud/ingest
-    restart: unless-stopped
-    read_only: true
-    tmpfs: [/tmp]
-    cap_drop: [ALL]
-    security_opt: [no-new-privileges:true]
     environment:
       DB_INGEST_PASSWORD: ${DB_INGEST_PASSWORD}
     volumes: ["./data/cloud/logs:/var/log/vilaaurora"]
     networks: [cloud_svc]
     depends_on: {db: {condition: service_healthy}}
 
+  # gateways compartilham o namespace de rede do hub: só existem "dentro" dos túneis
   ingest-gw:
+    <<: *hard
     image: nginx:1.27.3-alpine
     user: "${UID:-1000}:${GID:-1000}"
-    restart: unless-stopped
-    read_only: true
-    tmpfs: [/tmp]
-    cap_drop: [ALL]
+    network_mode: service:vpn-hub
     volumes:
       - ./cloud/ingest/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./pki/out/certs/ingest:/certs:ro
       - ./pki/out/crl.pem:/crl/crl.pem:ro
       - ./data/cloud/logs:/var/log/vilaaurora
-    networks:
-      wan_fibra: {aliases: [ingest-fibra]}
-      wan_4g:    {aliases: [ingest-4g]}
-      cloud_svc: {}
-    depends_on: [ingest-app]
+    depends_on: [vpn-hub, ingest-app]
 
   painel-app:
+    <<: *hard
     build: ./cloud/painel
     image: vilaaurora/painel:dev
-    restart: unless-stopped
-    read_only: true
-    tmpfs: [/tmp]
-    cap_drop: [ALL]
-    security_opt: [no-new-privileges:true]
     environment:
       PAINEL_VARIANT: corrigido
       DB_PAINEL_PASSWORD: ${DB_PAINEL_PASSWORD}
@@ -239,7 +286,32 @@ services:
     networks: [cloud_svc]
     depends_on: {seed: {condition: service_completed_successfully}}
 
-  # Painel LEGADO vulnerável — apenas para reproduzir o INC-VA-0712 (perfil "legado")
+  painel-gw:
+    <<: *hard
+    image: nginx:1.27.3-alpine
+    user: "${UID:-1000}:${GID:-1000}"
+    network_mode: service:vpn-hub
+    volumes:
+      - ./cloud/painel/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./pki/out/certs/painel:/certs:ro
+      - ./data/cloud/logs:/var/log/vilaaurora
+    depends_on: [vpn-hub, painel-app]
+
+  # "Notebook do administrador" na internet: cliente WireGuard + SOCKS em 127.0.0.1:1080
+  admin-laptop:
+    image: vilaaurora/vpn:dev
+    restart: unless-stopped
+    cap_drop: [ALL]
+    cap_add: [NET_ADMIN, SETUID, SETGID]  # sockd troca para usuário sem privilégio
+    command: ["/opt/laptop/entrypoint.sh"]
+    environment: {ADMIN_USER: "${ADMIN_USER:-bruno.coord}"}
+    networks:
+      internet: {ipv4_address: 172.30.99.10}
+    ports: ["127.0.0.1:1080:1080"]
+    volumes: ["./vpn/out:/vpn:ro"]
+    depends_on: [vpn-hub]
+
+  # ================================================================== LEGADO (só reprodução do INC-VA-0712)
   painel-legado-app:
     image: vilaaurora/painel:dev
     profiles: [legado]
@@ -252,41 +324,57 @@ services:
     networks: [cloud_svc]
     depends_on: {seed: {condition: service_completed_successfully}}
 
-  painel-gw:
+  painel-legado-gw:
     image: nginx:1.27.3-alpine
+    profiles: [legado]
     user: "${UID:-1000}:${GID:-1000}"
     restart: unless-stopped
     read_only: true
     tmpfs: [/tmp]
-    cap_drop: [ALL]
     volumes:
-      - ./cloud/painel/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./cloud/painel/nginx-legado.conf:/etc/nginx/nginx.conf:ro
       - ./pki/out/certs/painel:/certs:ro
       - ./data/cloud/logs:/var/log/vilaaurora
-    networks: [cloud_svc, admin]
-    ports: ["127.0.0.1:8443:8443", "127.0.0.1:9443:9443"]
-    depends_on: [painel-app]
+    networks:
+      cloud_svc: {ipv4_address: 172.30.30.80}
+    depends_on: [painel-legado-app]
+
+  vpn-legado:
+    image: vilaaurora/vpn:dev
+    profiles: [legado]
+    restart: unless-stopped
+    cap_drop: [ALL]
+    cap_add: [NET_ADMIN, MKNOD, DAC_OVERRIDE, SETUID, SETGID]
+    devices: ["/dev/net/tun:/dev/net/tun"]
+    command: ["/opt/legado/entrypoint.sh"]
+    networks:
+      internet:  {ipv4_address: 172.30.99.3}
+      cloud_svc: {}
+    volumes:
+      - ./pki/out/certs/vpn-legado:/certs:ro
+      - ./vpn/out/legado-users:/vpn-legado/users:ro
+      - ./data/cloud/logs:/var/log/vilaaurora
 
 x-lan: &lan
   driver_opts:
-    # LAN do espaço: o host (operador local) alcança o painel da borda, mas sem NAT
-    # => nenhum container ganha saída para a internet por aqui.
+    # sem NAT: o host alcança, mas nenhum container ganha saída para a internet real
     com.docker.network.bridge.enable_ip_masquerade: "false"
 
 networks:
-  lan_centro: *lan
-  lan_escola: *lan
-  lan_ubs:    *lan
-  lan_horta:  *lan
-  lan_abrigo: *lan
+  lan_centro: {<<: *lan, ipam: {config: [{subnet: 172.31.1.0/24}]}}
   iot_centro: {internal: true}
+  lan_escola: {<<: *lan, ipam: {config: [{subnet: 172.31.2.0/24}]}}
   iot_escola: {internal: true}
-  iot_ubs:    {internal: true}
-  iot_horta:  {internal: true}
+  lan_ubs: {<<: *lan, ipam: {config: [{subnet: 172.31.3.0/24}]}}
+  iot_ubs: {internal: true}
+  lan_horta: {<<: *lan, ipam: {config: [{subnet: 172.31.4.0/24}]}}
+  iot_horta: {internal: true}
+  lan_abrigo: {<<: *lan, ipam: {config: [{subnet: 172.31.5.0/24}]}}
   iot_abrigo: {internal: true}
-  # Uplinks da borda. No dia 3 passam a transportar apenas túneis WireGuard (RT-06).
-  wan_fibra: {internal: true}
-  wan_4g:    {internal: true}
-  cloud_svc: {internal: true}
-  # Segmento administrativo (painel/SIEM). Na fase 3 só via VPN.
-  admin: *lan
+  wan_fibra: {internal: true, ipam: {config: [{subnet: 172.30.10.0/24, ip_range: 172.30.10.128/25}]}}
+  wan_4g:    {internal: true, ipam: {config: [{subnet: 172.30.20.0/24, ip_range: 172.30.20.128/25}]}}
+  cloud_svc: {internal: true, ipam: {config: [{subnet: 172.30.30.0/24, ip_range: 172.30.30.128/25}]}}
+  # segmento administrativo (SIEM/dashboard): só alcançável pelo hub após MFA
+  admin:     {internal: true, ipam: {config: [{subnet: 172.30.40.0/24, ip_range: 172.30.40.128/25}]}}
+  # "internet" simulada: admins remotos, atacante, VPN legada
+  internet:  {<<: *lan, ipam: {config: [{subnet: 172.30.99.0/24, ip_range: 172.30.99.128/25}]}}
