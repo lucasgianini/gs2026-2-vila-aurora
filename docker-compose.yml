@@ -351,6 +351,35 @@ services:
       - ./pki:/pki
       - ./data/cloud/logs:/var/log/vilaaurora
 
+  # ================================================================== E-MAIL / PHISHING (RT-10/11) — perfil "phishing"
+  dns:
+    image: coredns/coredns:1.11.3
+    profiles: [phishing]
+    restart: unless-stopped
+    command: ["-conf", "/zones/Corefile"]
+    volumes: ["./phishing/out:/zones:ro"]
+    networks:
+      mail: {ipv4_address: 172.30.50.2}
+    ports: ["127.0.0.1:5354:53/udp"]   # 5353 costuma estar ocupada pelo mDNS do host
+
+  # caixa de entrada do laboratório (contas FICTÍCIAS da equipe) — servidor "mail.vilaaurora.test"
+  mailpit:
+    image: axllent/mailpit:v1.20.7
+    profiles: [phishing]
+    restart: unless-stopped
+    networks:
+      mail: {ipv4_address: 172.30.50.10}
+    ports: ["127.0.0.1:8025:8025"]
+
+  # Gophish: simulação de phishing SOMENTE contra contas fictícias; não captura senhas
+  gophish:
+    image: gophish/gophish:0.12.1
+    profiles: [phishing]
+    restart: unless-stopped
+    networks:
+      mail: {ipv4_address: 172.30.50.20}
+    ports: ["127.0.0.1:3333:3333", "127.0.0.1:3334:80"]   # admin + páginas (só localhost)
+
   # ================================================================== LEGADO (só reprodução do INC-VA-0712)
   painel-legado-app:
     image: vilaaurora/painel:dev
@@ -420,5 +449,7 @@ networks:
   cloud_svc: {internal: true, ipam: {config: [{subnet: 172.30.30.0/24, ip_range: 172.30.30.128/25}]}}
   # segmento administrativo (SIEM/dashboard): só alcançável pelo hub após MFA
   admin:     {internal: true, ipam: {config: [{subnet: 172.30.40.0/24, ip_range: 172.30.40.128/25}]}}
+  # e-mail do laboratório (DNS, caixa de entrada, Gophish)
+  mail:      {<<: *lan, ipam: {config: [{subnet: 172.30.50.0/24, ip_range: 172.30.50.128/25}]}}
   # "internet" simulada: admins remotos, atacante, VPN legada
   internet:  {<<: *lan, ipam: {config: [{subnet: 172.30.99.0/24, ip_range: 172.30.99.128/25}]}}
