@@ -1,0 +1,22 @@
+{% extends "base.html" %}{% block title %}Histórico de acessos{% endblock %}
+{% block content %}
+<h1>Histórico de acessos</h1>
+<p class="help">As pessoas aparecem por um código (pseudônimo), não pelo nome.</p>
+<form method="get" role="search">
+  <label for="q">Buscar equipamento ou código</label>
+  <input id="q" name="q" value="{{ q }}" maxlength="{{ 40 if variant != 'legado' else 2000 }}">
+  <label for="site">Espaço</label>
+  <select id="site" name="site"><option value="">Todos</option>
+    {% for s in sites %}<option value="{{ s }}" {{ 'selected' if s == site }}>{{ s }}</option>{% endfor %}</select>
+  <label for="dia">Dia</label>
+  <input id="dia" name="dia" type="date" value="{{ dia }}">
+  <div><button type="submit">Buscar</button></div>
+</form>
+{% if erro %}<p class="erro" role="alert">{{ erro }}</p>{% endif %}
+{% if rows %}
+<table><caption>{{ rows|length }} resultado(s)</caption>
+<thead><tr><th scope="col">Quando</th><th scope="col">Espaço</th><th scope="col">Equipamento</th><th scope="col">Pessoa (código)</th><th scope="col">Liberado?</th><th scope="col">Método</th></tr></thead><tbody>
+{% for r in rows %}<tr><td>{{ r.ts }}</td><td>{{ r.site }}</td><td>{{ r.device }}</td><td>{{ r.pseudonimo }}</td><td>{{ 'sim' if r.granted else 'não' }}</td><td>{{ r.method }}</td></tr>{% endfor %}
+</tbody></table>
+{% endif %}
+{% endblock %}

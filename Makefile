@@ -13,7 +13,7 @@ bootstrap: ## gera segredos (.env), PKI completa e diretórios de dados
 	$(MAKE) dirs
 
 dirs:
-	@mkdir -p data/control $(foreach s,$(SITES),data/$(s)/broker data/$(s)/edge data/$(s)/logs)
+	@mkdir -p data/control data/cloud/db data/cloud/logs/pg secrets $(foreach s,$(SITES),data/$(s)/broker data/$(s)/edge data/$(s)/logs)
 	@[ -f data/control/faults.json ] || echo '{}' > data/control/faults.json
 
 up: dirs ## sobe o laboratório

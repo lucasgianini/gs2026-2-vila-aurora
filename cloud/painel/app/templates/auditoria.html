@@ -1,0 +1,7 @@
+{% extends "base.html" %}{% block title %}Auditoria{% endblock %}
+{% block content %}
+<h1>Trilha de auditoria</h1>
+<table><thead><tr><th scope="col">Quando (UTC)</th><th scope="col">Quem</th><th scope="col">Ação</th><th scope="col">Alvo</th><th scope="col">IP</th><th scope="col">Detalhes</th></tr></thead><tbody>
+{% for r in rows %}<tr><td>{{ r.ts.strftime('%d/%m %H:%M:%S') }}</td><td>{{ r.actor }}</td><td>{{ r.action }}</td><td>{{ r.target or '—' }}</td><td>{{ r.ip or '—' }}</td><td>{{ r.detail|tojson if r.detail else '—' }}</td></tr>{% endfor %}
+</tbody></table>
+{% endblock %}

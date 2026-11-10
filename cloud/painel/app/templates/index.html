@@ -1,0 +1,31 @@
+{% extends "base.html" %}{% block title %}Visão geral{% endblock %}
+{% block content %}
+<h1>Visão geral</h1>
+<h2>Alarmes ativos</h2>
+{% if alarmes %}
+<table><thead><tr><th scope="col">Espaço</th><th scope="col">Gravidade</th><th scope="col">Mensagem</th><th scope="col">Desde</th><th scope="col">Reconhecido</th></tr></thead><tbody>
+{% for a in alarmes %}<tr>
+  <td>{{ a.site }}</td><td class="sev-{{ a.severity }}">{{ a.severity }}</td><td>{{ a.message }}</td>
+  <td>{{ a.raised_at.strftime('%d/%m %H:%M') }}</td>
+  <td>{% if a.ack_by %}{{ a.ack_by }}{% elif can('reconhecer') or variant=='legado' %}
+    <form class="inline" method="post" action="{{ url_for('reconhecer', aid=a.id) }}">
+      {% if csrf_token %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
+      <button type="submit">Reconhecer</button></form>{% else %}—{% endif %}</td>
+</tr>{% endfor %}</tbody></table>
+{% else %}<p class="ok">Nenhum alarme ativo.</p>{% endif %}
+
+<h2>Espaços</h2>
+<div class="grid">
+{% for site, rows in por_site|dictsort %}
+<section class="card" aria-labelledby="s-{{ site }}">
+  <h3 id="s-{{ site }}">{{ site|capitalize }}</h3>
+  <table><thead><tr><th scope="col">Equipamento</th><th scope="col">Leitura</th><th scope="col">Atualizado</th></tr></thead><tbody>
+  {% for r in rows %}{% set age = (agora - r.ts).total_seconds() %}
+  <tr><td>{{ r.device.split('-',1)[1] }}</td>
+      <td>{% for k,v in r.data.items() if k not in ('device','type','site','seq','ts') %}{{ k }}: {{ v }}{% if not loop.last %}; {% endif %}{% endfor %}</td>
+      <td class="{{ 'ok' if age < 120 else 'stale' }}">{{ 'agora' if age < 120 else ('há %d min' % (age//60)) }}</td></tr>
+  {% endfor %}</tbody></table>
+</section>
+{% endfor %}
+</div>
+{% endblock %}

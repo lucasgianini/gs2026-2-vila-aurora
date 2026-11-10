@@ -114,7 +114,7 @@ cmd_bootstrap() {
     cmd_issue edge "edge-$s" "DNS:edge-$s"
     for d in ${DEVICES[$s]}; do cmd_issue device "$s-$d"; done
   done
-  cmd_issue server ingest "DNS:ingest,DNS:ingest.vilaaurora.test"
+  cmd_issue server ingest "DNS:ingest,DNS:ingest-fibra,DNS:ingest-4g,DNS:ingest.vilaaurora.test"
   cmd_issue server painel "DNS:painel,DNS:painel.vilaaurora.test,DNS:localhost"
   cmd_issue client soar
   cmd_issue client painel-client
