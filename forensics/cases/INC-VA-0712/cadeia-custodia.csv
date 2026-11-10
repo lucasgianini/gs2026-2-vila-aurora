@@ -1,0 +1,16 @@
+item;descricao;origem;coletado_por;coletado_em_utc;sha256;tamanho_bytes
+E01;Alertas do SIEM (Wazuh);siem:/var/ossec/logs/alerts/alerts.json;lucas@lab-forense;2026-11-10T18:31:34Z;90336c7cb1c38cd565b24d1970ae4ae51bf674fc2fe59faf6c83b6fccd42dd7e;138103
+E02;Arquivo bruto de eventos do SIEM;siem:/var/ossec/logs/archives/archives.json;lucas@lab-forense;2026-11-10T18:31:34Z;35935b1eabfe95b647dd4359f6782416f9caa533c17fc920894506b5b9d2d6ef;15202363
+E03;Log de autenticação da VPN legada;nuvem:/var/log/vilaaurora/vpn-legado.log;lucas@lab-forense;2026-11-10T18:31:34Z;5ed6ae5d63ed1a75ab24c166447d0a6e6a0c712e39bb2c022e70082b17232c38;16143
+E04;Acessos HTTP ao painel legado;nuvem:/var/log/vilaaurora/painel-legado-gw.jsonl;lucas@lab-forense;2026-11-10T18:31:34Z;0c669741140ed75ce50350bce832222351c1b7e871ba1cb9a9cb929ed541e196;1022
+E05;Log de consultas do PostgreSQL;db:/var/log/vilaaurora/pg/postgresql.json;lucas@lab-forense;2026-11-10T18:31:34Z;b23df13f7dbd69cfc935145badf26fb2a2b653e94ceba80844cfa32a03dee130;1513318
+E06;Log da borda da escola (decisões e recusa);borda-escola:/var/log/vilaaurora/edge.jsonl;lucas@lab-forense;2026-11-10T18:31:34Z;94deabf220cec8c82dec744c2d6639f6598b324720f345b0905258f97f9bd3be;17285
+E07;Comandos de atuador (banco);db:ops.commands;lucas@lab-forense;2026-11-10T18:31:35Z;73155d260e893f2ecc9c694d6b980efbae14ad52cb59f0045f527dac45c411d7;2409
+E08;Trilha de auditoria (banco);db:audit.log;lucas@lab-forense;2026-11-10T18:31:35Z;61a4dc9a4fd6eba368cb44b889d9d8373052d9a7a0e71db2555237a2b88c163e;1990
+E09;Respostas do SOAR;nuvem:/var/log/vilaaurora/soar.jsonl;lucas@lab-forense;2026-11-10T18:31:35Z;be0d5cb12dc1babc5867892e968467b032b3693938d0b00e192e7146b1dbaf0e;4382
+V01;Dados voláteis 01-rede.txt (vpn-legado);container:vpn-legado;lucas@lab-forense;2026-11-10T18:33:24Z;a0315264da804a2cdc0e7c0796542d80ea8a8b1643867413dd0b0bd7f9dcc329;718
+V02;Dados voláteis 02-processos.txt (vpn-legado);container:vpn-legado;lucas@lab-forense;2026-11-10T18:33:24Z;24f4e062e957b83f8db3fe31b661a4ad0a0b198e5bb88da64ca441b41ac393de;250
+V03;Dados voláteis 03-descritores.txt (vpn-legado);container:vpn-legado;lucas@lab-forense;2026-11-10T18:33:24Z;dfdbf440998dd57d7bf9231fe28c19d92ebf6e646731c79eb1d0e457cb7dafba;984
+V04;Dados voláteis 04-mapa-memoria-pid1.txt (vpn-legado);container:vpn-legado;lucas@lab-forense;2026-11-10T18:33:24Z;7375e3fe06f1186d16df9bc8fc1ffe9d7e1e5492b4b5b503ec0beeb1ce15a0e6;3610
+V05;Dados voláteis 05-ambiente-pid1.txt (vpn-legado);container:vpn-legado;lucas@lab-forense;2026-11-10T18:33:24Z;67199c0942a62072caabd5e37395a2a706eb6becd25b143605cf29c6b6567349;113
+V06;Dados voláteis 06-uptime.txt (vpn-legado);container:vpn-legado;lucas@lab-forense;2026-11-10T18:33:24Z;bfc89a48784ab29d2b93142385888f170cce89b1a52408fda93f2ae68029eaa2;46

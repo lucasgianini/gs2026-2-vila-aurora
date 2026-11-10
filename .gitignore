@@ -27,4 +27,4 @@ __pycache__/
 .vscode/
 .DS_Store
 phishing/out/
-forensics/cases/
+forensics/cases/*/volateis-*/05-ambiente-*.txt

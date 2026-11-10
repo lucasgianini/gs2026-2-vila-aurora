@@ -1,0 +1,15 @@
+== PID 1: openvpn --config /tmp/server.conf 
+total 0
+lrwx------    1 root     root            64 Nov 10 18:33 0 -> /dev/null
+l-wx------    1 root     root            64 Nov 10 18:33 1 -> /var/log/vilaaurora/vpn-legado.log
+l-wx------    1 root     root            64 Nov 10 18:33 2 -> /var/log/vilaaurora/vpn-legado.log
+l-wx------    1 root     root            64 Nov 10 18:33 3 -> /tmp/status.log
+lrwx------    1 root     root            64 Nov 10 18:33 4 -> /dev/net/tun
+lrwx------    1 root     root            64 Nov 10 18:33 5 -> socket:[2215382]
+== PID 77: sh -c for p in /proc/[0-9]*; do pid=${p#/proc/}; [ -r $p/cmdline ] || continue;
+       echo "== PID $pid: $(tr "\0" " " < $p/cmdline)"; ls -l $p/fd 2>/dev/null | head -20;
+     done 
+total 0
+lr-x------    1 root     root            64 Nov 10 18:33 0 -> pipe:[2392517]
+l-wx------    1 root     root            64 Nov 10 18:33 1 -> pipe:[2382347]
+l-wx------    1 root     root            64 Nov 10 18:33 2 -> pipe:[2382348]

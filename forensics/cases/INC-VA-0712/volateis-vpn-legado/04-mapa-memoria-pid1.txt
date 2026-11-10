@@ -1,0 +1,40 @@
+560402635000-56040263c000 r--p 00000000 00:171 5653336                   /usr/sbin/openvpn
+56040263c000-5604026a6000 r-xp 00007000 00:171 5653336                   /usr/sbin/openvpn
+5604026a6000-5604026e5000 r--p 00071000 00:171 5653336                   /usr/sbin/openvpn
+5604026e5000-5604026e8000 r--p 000b0000 00:171 5653336                   /usr/sbin/openvpn
+5604026e8000-5604026e9000 rw-p 000b3000 00:171 5653336                   /usr/sbin/openvpn
+560414d22000-560414d23000 ---p 00000000 00:00 0                          [heap]
+560414d23000-560414d28000 rw-p 00000000 00:00 0                          [heap]
+7fc11c365000-7fc11c36d000 rw-p 00000000 00:00 0 
+7fc11c39f000-7fc11c428000 rw-p 00000000 00:00 0 
+7fc11c428000-7fc11c42a000 r--p 00000000 00:171 5644138                   /usr/lib/libcap-ng.so.0.0.0
+7fc11c42a000-7fc11c42d000 r-xp 00002000 00:171 5644138                   /usr/lib/libcap-ng.so.0.0.0
+7fc11c42d000-7fc11c42e000 r--p 00005000 00:171 5644138                   /usr/lib/libcap-ng.so.0.0.0
+7fc11c42e000-7fc11c42f000 r--p 00005000 00:171 5644138                   /usr/lib/libcap-ng.so.0.0.0
+7fc11c42f000-7fc11c430000 rw-p 00006000 00:171 5644138                   /usr/lib/libcap-ng.so.0.0.0
+7fc11c430000-7fc11c47b000 r--p 00000000 00:171 5269849                   /lib/libcrypto.so.3
+7fc11c47b000-7fc11c73e000 r-xp 0004b000 00:171 5269849                   /lib/libcrypto.so.3
+7fc11c73e000-7fc11c817000 r--p 0030e000 00:171 5269849                   /lib/libcrypto.so.3
+7fc11c817000-7fc11c874000 r--p 003e6000 00:171 5269849                   /lib/libcrypto.so.3
+7fc11c874000-7fc11c877000 rw-p 00443000 00:171 5269849                   /lib/libcrypto.so.3
+7fc11c877000-7fc11c87a000 rw-p 00000000 00:00 0 
+7fc11c87a000-7fc11c88d000 r--p 00000000 00:171 5269850                   /lib/libssl.so.3
+7fc11c88d000-7fc11c901000 r-xp 00013000 00:171 5269850                   /lib/libssl.so.3
+7fc11c901000-7fc11c92f000 r--p 00087000 00:171 5269850                   /lib/libssl.so.3
+7fc11c92f000-7fc11c93a000 r--p 000b5000 00:171 5269850                   /lib/libssl.so.3
+7fc11c93a000-7fc11c93e000 rw-p 000c0000 00:171 5269850                   /lib/libssl.so.3
+7fc11c93e000-7fc11c940000 r--p 00000000 00:171 5644314                   /usr/lib/liblz4.so.1.9.4
+7fc11c940000-7fc11c95b000 r-xp 00002000 00:171 5644314                   /usr/lib/liblz4.so.1.9.4
+7fc11c95b000-7fc11c95e000 r--p 0001d000 00:171 5644314                   /usr/lib/liblz4.so.1.9.4
+7fc11c95e000-7fc11c95f000 r--p 0001f000 00:171 5644314                   /usr/lib/liblz4.so.1.9.4
+7fc11c95f000-7fc11c960000 rw-p 00020000 00:171 5644314                   /usr/lib/liblz4.so.1.9.4
+7fc11c960000-7fc11c963000 r--p 00000000 00:171 5644382                   /usr/lib/liblzo2.so.2.0.0
+7fc11c963000-7fc11c98f000 r-xp 00003000 00:171 5644382                   /usr/lib/liblzo2.so.2.0.0
+7fc11c98f000-7fc11c993000 r--p 0002f000 00:171 5644382                   /usr/lib/liblzo2.so.2.0.0
+7fc11c993000-7fc11c994000 r--p 00032000 00:171 5644382                   /usr/lib/liblzo2.so.2.0.0
+7fc11c994000-7fc11c995000 rw-p 00033000 00:171 5644382                   /usr/lib/liblzo2.so.2.0.0
+7fc11c995000-7fc11c999000 r--p 00000000 00:00 0                          [vvar]
+7fc11c999000-7fc11c99b000 r--p 00000000 00:00 0                          [vvar_vclock]
+7fc11c99b000-7fc11c99d000 r-xp 00000000 00:00 0                          [vdso]
+7fc11c99d000-7fc11c9b1000 r--p 00000000 00:171 5269846                   /lib/ld-musl-x86_64.so.1
+7fc11c9b1000-7fc11ca05000 r-xp 00014000 00:171 5269846                   /lib/ld-musl-x86_64.so.1

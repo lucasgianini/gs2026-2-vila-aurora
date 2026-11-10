@@ -36,8 +36,8 @@ dex 'for p in /proc/[0-9]*; do pid=${p#/proc/}; [ -r $p/cmdline ] || continue;
      done' > "$DIR/03-descritores.txt"
 dex 'head -40 /proc/1/maps 2>/dev/null' > "$DIR/04-mapa-memoria-pid1.txt"
 
-# 4. menos volátil: variáveis de ambiente do processo (podem conter indicadores) e uptime
-dex 'cat /proc/1/environ 2>/dev/null | tr "\0" "\n"' > "$DIR/05-ambiente-pid1.txt"
+# 4. menos volátil: variáveis de ambiente (segredos redigidos; dump completo fica fora do git) e uptime
+dex 'cat /proc/1/environ 2>/dev/null | tr "\0" "\n"' | sed -E 's/(PASS|PASSWORD|SECRET|KEY|TOKEN)=.*/\1=[REDIGIDO]/I' > "$DIR/05-ambiente-pid1.txt"
 dex 'cat /proc/uptime; echo; cat /proc/loadavg' > "$DIR/06-uptime.txt"
 
 # hash de cada artefato -> cadeia de custódia

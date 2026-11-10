@@ -1,0 +1,4 @@
+PID   PPID  USER     ELAPSED COMMAND
+    1     0 root      9:02   openvpn --config /tmp/server.conf
+   70     0 root      0:01   sh -c ps -eo pid,ppid,user,etime,args 2>/dev/null || ps aux
+   76    70 root      0:01   ps -eo pid,ppid,user,etime,args
