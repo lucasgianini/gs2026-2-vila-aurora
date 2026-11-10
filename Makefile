@@ -42,4 +42,4 @@ clean: ## APAGA dados de runtime (não apaga PKI)
 	rm -rf data
 
 restart-hub: ## reinicia o hub VPN e os gateways que vivem no namespace de rede dele
-	docker compose restart vpn-hub && sleep 3 && docker compose restart ingest-gw painel-gw
+	docker compose restart vpn-hub && sleep 3 && docker compose up -d --force-recreate --no-deps ingest-gw painel-gw

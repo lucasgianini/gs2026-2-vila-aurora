@@ -15,6 +15,7 @@ import hashlib
 import hmac
 import json
 import os
+import shlex
 import ssl
 import struct
 import subprocess
@@ -73,7 +74,10 @@ def revoke(ip: str, reason: str, quiet=False):
         rules = ipt("-S", chain).stdout.splitlines()
         for r in rules:
             if f"-s {ip}/32" in r:
-                ipt(*(["-D"] + r.split()[1:]), check=False)
+                # shlex: o -S imprime o comentário entre aspas ("mfa:usuario")
+                res = ipt(*(["-D"] + shlex.split(r)[1:]), check=False)
+                if res.returncode != 0:
+                    log("vpn_revoke_rule_error", "high", rule=r, error=res.stderr.strip())
     s = sessions.pop(ip, None)
     if s and not quiet:
         log("vpn_session_revoked", "notice", user=s["user"], tunnel_ip=ip, reason=reason)
@@ -201,6 +205,12 @@ class Control(BaseHTTPRequestHandler):
             if body.get("tunnel_ip"):
                 ips.append(body["tunnel_ip"])
             with lock:
+                for ip in ips:
+                    revoke(ip, reason=body.get("reason", "soar"))
+            return self._json(200, {"revoked": ips})
+        if self.path == "/revoke_all":
+            with lock:
+                ips = list(sessions)
                 for ip in ips:
                     revoke(ip, reason=body.get("reason", "soar"))
             return self._json(200, {"revoked": ips})

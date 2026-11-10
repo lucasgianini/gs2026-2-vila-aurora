@@ -1,0 +1,8 @@
+  [OK]   ação aguardando aprovação (=aguardando_aprovacao)
+  [OK]   MFA da VPN (bruno.coord) (=200)
+  [OK]   login no painel com TOTP (=302)
+  [OK]   aprovação no painel (=302)
+  [OK]   SOAR executou após aprovação (=executada)
+  decisão: bruno.coord — todas as sessões administrativas encerradas: ['10.90.0.12']
+  [OK]   sessão administrativa encerrada (painel inacessível) (=000)
+== Resultado: 0 falha(s)

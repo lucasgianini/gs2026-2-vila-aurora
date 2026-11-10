@@ -227,6 +227,7 @@ services:
       DB_INGEST_PASSWORD: ${DB_INGEST_PASSWORD}
       DB_PAINEL_PASSWORD: ${DB_PAINEL_PASSWORD}
       DB_PAINEL_VULN_PASSWORD: ${DB_PAINEL_VULN_PASSWORD}
+      DB_SOAR_PASSWORD: ${DB_SOAR_PASSWORD}
     command: ["postgres", "-c", "logging_collector=on", "-c", "log_destination=jsonlog",
               "-c", "log_directory=/var/log/vilaaurora/pg", "-c", "log_filename=postgresql.log",
               "-c", "log_connections=on", "-c", "log_disconnections=on", "-c", "log_timezone=UTC"]
@@ -324,6 +325,32 @@ services:
       - ./data:/logs/va:ro
       - wazuh_logs:/var/ossec/logs
 
+  soar:
+    <<: *hard
+    build: ./cloud/soar
+    group_add: ["999"]   # grupo wazuh: leitura do alerts.json
+    environment:
+      DB_SOAR_PASSWORD: ${DB_SOAR_PASSWORD}
+    networks: [cloud_svc]
+    volumes:
+      - wazuh_logs:/wazuh:ro
+      - ./pki/out/certs/soar:/certs:ro
+      - ./data/cloud/logs:/var/log/vilaaurora
+    depends_on: [siem, db, vpn-hub]
+
+  # CA intermediária "online" restrita: só revoga certificados de dispositivo, só para o SOAR
+  pki-agent:
+    image: vilaaurora/vpn:dev
+    user: "${UID:-1000}:${GID:-1000}"
+    restart: unless-stopped
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    command: ["python3", "/pki/agent.py"]
+    networks: [cloud_svc]
+    volumes:
+      - ./pki:/pki
+      - ./data/cloud/logs:/var/log/vilaaurora
+
   # ================================================================== LEGADO (só reprodução do INC-VA-0712)
   painel-legado-app:
     image: vilaaurora/painel:dev
@@ -332,6 +359,7 @@ services:
     environment:
       PAINEL_VARIANT: legado
       DB_PAINEL_VULN_PASSWORD: ${DB_PAINEL_VULN_PASSWORD}
+      DB_SOAR_PASSWORD: ${DB_SOAR_PASSWORD}
       FLASK_SECRET_KEY: ${FLASK_SECRET_KEY}
     volumes: ["./data/cloud/logs:/var/log/vilaaurora"]
     networks: [cloud_svc]

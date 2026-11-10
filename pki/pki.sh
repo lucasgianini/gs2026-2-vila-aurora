@@ -118,6 +118,7 @@ cmd_bootstrap() {
   cmd_issue server painel "DNS:painel.vilaaurora.test,IP:10.90.0.1,IP:172.30.30.80"
   cmd_issue server vpn-hub "DNS:vpn-hub,IP:172.30.30.2"
   cmd_issue server vpn-legado "DNS:vpn.vilaaurora.test,IP:172.30.99.3"
+  cmd_issue server pki-agent "DNS:pki-agent"
   cmd_issue client soar
   cmd_issue client painel-client
   # dispositivo "intruso" para demonstrar recusa (certificado será revogado na demo)

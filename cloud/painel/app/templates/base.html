@@ -16,6 +16,7 @@
     {% if can('comandar') or variant=='legado' %}<li><a href="{{ url_for('comandos') }}">Comandos</a></li>{% endif %}
     {% if can('agenda') or variant=='legado' %}<li><a href="{{ url_for('agenda') }}">Agenda da bomba</a></li>{% endif %}
     {% if can('ver_acessos') or variant=='legado' %}<li><a href="{{ url_for('acessos') }}">Histórico de acessos</a></li>{% endif %}
+    {% if can('ver_soc') %}<li><a href="{{ url_for('soc') }}">SOC</a></li>{% endif %}
     {% if can('ver_auditoria') %}<li><a href="{{ url_for('auditoria') }}">Auditoria</a></li>{% endif %}
     <li><a href="{{ url_for('seguranca') }}">Segurança</a></li>
   </ul></nav>

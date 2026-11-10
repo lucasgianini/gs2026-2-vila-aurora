@@ -42,6 +42,7 @@ PERMS = {
     "agenda":          {"tecnico", "coordenacao"},
     "ver_acessos":     {"coordenacao", "auditor"},
     "ver_auditoria":   {"coordenacao", "auditor"},
+    "ver_soc":         {"tecnico", "coordenacao", "auditor"},
 }
 # Ações de alto impacto exigem aprovação de outra pessoa (RT-15)
 HIGH_IMPACT = {("bomba", "off"), ("gerador", "off"), ("fechadura", "unlock_all")}
@@ -301,6 +302,28 @@ def create_app() -> Flask:
     def auditoria():
         rows = query("SELECT ts, actor, action, target, ip, detail FROM audit.log ORDER BY id DESC LIMIT 200")
         return render_template("auditoria.html", rows=rows)
+
+    # ------------------------------------------------------------------ console do SOC (RT-13/15)
+    @app.get("/soc")
+    @login_required("ver_soc")
+    def soc():
+        alerts = query("SELECT id, ts, event_ts, rule_id, level, description, groups, mitre, location FROM soc.alerts "
+                       "ORDER BY ts DESC LIMIT 100")
+        actions = query("SELECT a.id, a.ts, a.action, a.target, a.risk, a.status, a.result, a.decided_by, "
+                        "a.alert_id, al.description AS alerta FROM soc.actions a "
+                        "LEFT JOIN soc.alerts al ON al.id = a.alert_id ORDER BY a.ts DESC LIMIT 100")
+        return render_template("soc.html", alerts=alerts, actions=actions)
+
+    @app.post("/soc/acoes/<int:aid>")
+    @login_required("aprovar")
+    def soc_decidir(aid):
+        decisao = "aprovada" if request.form.get("decisao") == "aprovar" else "negada"
+        n = query("UPDATE soc.actions SET status=%s, decided_by=%s, decided_at=now() "
+                  "WHERE id=%s AND status='aguardando_aprovacao'", (decisao, session["user"], aid))
+        if n:
+            audit("soc_action_" + decisao, str(aid))
+            log("soc_action_decision", "notice", action_id=aid, decision=decisao)
+        return redirect(url_for("soc"))
 
     @app.get("/seguranca")
     @login_required()

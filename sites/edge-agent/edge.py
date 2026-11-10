@@ -141,6 +141,7 @@ def parse_windows(spec: str) -> list[tuple[int, int]]:
 
 
 schedule = parse_windows(PUMP_WINDOWS)
+quarantine: set[str] = set()
 
 
 def in_window(windows=None) -> bool:
@@ -271,6 +272,8 @@ def on_message(_c, _u, msg):
         log_event("mqtt_bad_payload", "warning", topic=msg.topic)
         return
     _, dev, sub = msg.topic.split("/", 2)
+    if dev in quarantine:   # dispositivo isolado: dados ignorados (não alimentam regras nem a nuvem)
+        return
     if d.get("device") != dev:  # payload não pode alegar outra identidade
         log_event("mqtt_identity_mismatch", "high", topic=msg.topic, claimed=d.get("device"))
         return
@@ -410,7 +413,7 @@ def handle_remote(c: dict) -> tuple[bool, str]:
             reason = "ação de alto impacto sem aprovação humana"
         else:
             reason = None
-    elif action in ("on", "off", "safe_mode"):
+    elif action in ("on", "off", "safe_mode", "isolate", "release"):
         reason = None
     else:
         reason = "ação desconhecida"
@@ -423,6 +426,11 @@ def handle_remote(c: dict) -> tuple[bool, str]:
     if action == "safe_mode":   # RT-15: atuador em modo seguro -> automação local assume
         state["pump_auto"] = True
         log_event("safe_mode", "notice", **base)
+        return True, "ok"
+    if action in ("isolate", "release"):   # RT-15: isolar dispositivo suspeito (baixo risco, reversível)
+        (quarantine.add if action == "isolate" else quarantine.discard)(dev)
+        log_event("device_" + ("isolated" if action == "isolate" else "released"), "notice", **base)
+        outbox.put("audit", dev, {"ts": utcnow(), "event": "device_" + action, **base}, priority=2)
         return True, "ok"
     send_cmd(dev, action, "remote", c.get("reason", "comando remoto"), cmd_id=c.get("id"),
              approved_by=c.get("approved_by"), requested_by=who)
