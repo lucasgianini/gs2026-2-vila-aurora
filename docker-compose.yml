@@ -425,6 +425,18 @@ services:
       - ./vpn/out/legado-users:/vpn-legado/users:ro
       - ./data/cloud/logs:/var/log/vilaaurora
 
+  # Origem externa da reprodução do INC-VA-0712 (perfil "legado"; só alcança a "internet" simulada)
+  externo:
+    image: vilaaurora/vpn:dev
+    profiles: [legado]
+    cap_drop: [ALL]
+    cap_add: [NET_ADMIN, MKNOD]
+    devices: ["/dev/net/tun:/dev/net/tun"]
+    command: ["sleep", "infinity"]
+    networks:
+      internet: {ipv4_address: 172.30.99.66}
+
+
 volumes:
   wazuh_logs: {}
 
