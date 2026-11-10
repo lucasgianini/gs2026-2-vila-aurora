@@ -43,3 +43,9 @@ clean: ## APAGA dados de runtime (não apaga PKI)
 
 restart-hub: ## reinicia o hub VPN e os gateways que vivem no namespace de rede dele
 	docker compose restart vpn-hub && sleep 3 && docker compose up -d --force-recreate --no-deps ingest-gw painel-gw
+
+totp: ## código TOTP atual de um operador (uso: make totp U=carla.tec)
+	@bash -c 'source scripts/lib.sh && painel_totp $(U)'
+
+soc: ## abre o console do SOC no navegador (requer sessão/MFA no cenário real)
+	@echo "Painel: https://localhost:8443/soc  (login em secrets/operadores.txt)"
