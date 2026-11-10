@@ -1,0 +1,28 @@
+# Segredos e material gerado — NUNCA versionar (regra C9)
+.env
+pki/out/
+**/*.key
+**/*.pem
+**/*.p12
+**/*.crt
+!pki/README.md
+vpn/out/
+secrets/
+
+# Dados e evidências volumosas geradas em runtime
+data/
+*.sqlite
+*.db
+forensics/cases/*/raw/
+docs/evidencias/**/*.pcap
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+
+# Editor/OS
+.idea/
+.vscode/
+.DS_Store

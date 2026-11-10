@@ -1,0 +1,176 @@
+# Rede Comunitária Vila Aurora — laboratório (E2)
+# Camadas: campo (devices-*) -> borda (broker-*, edge-*) -> nuvem (cloud/*) -> supervisão (painel, SIEM)
+# Cada rede Docker é um segmento (RT-07). Redes iot_* são internas: sem rota para fora.
+name: vilaaurora
+
+x-broker: &broker
+  image: eclipse-mosquitto:2.0.20
+  user: "${UID:-1000}:${GID:-1000}"
+  restart: unless-stopped
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+
+x-devices: &devices
+  build: ./sites
+  image: vilaaurora/site:dev
+  command: ["python", "devices/sim.py"]
+  restart: unless-stopped
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+
+x-edge: &edge
+  image: vilaaurora/site:dev
+  command: ["python", "edge-agent/edge.py"]
+  restart: unless-stopped
+  read_only: true
+  tmpfs: [/tmp]
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  environment: &edge-env
+    PSEUDO_KEY: ${PSEUDO_KEY:?rode scripts/gen-secrets.sh}
+    UPLINKS: "fibra=https://ingest-fibra:8443,4g=https://ingest-4g:8443"
+    TZ: America/Sao_Paulo
+
+services:
+  # ------------------------------------------------------------------ CENTRO COMUNITÁRIO
+  broker-centro:
+    <<: *broker
+    networks: [iot_centro]
+    volumes:
+      - ./sites/broker/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ./sites/broker/acl:/mosquitto/config/acl:ro
+      - ./pki/out/certs/broker-centro:/mosquitto/certs:ro
+      - ./pki/out/crl.pem:/mosquitto/crl/crl.pem:ro
+      - ./data/centro/broker:/mosquitto/data
+      - ./data/centro/logs:/mosquitto/log
+  devices-centro:
+    <<: *devices
+    environment: {SITE: centro, DEVICES: "energia fechadura qualidade-ar"}
+    networks: [iot_centro]
+    volumes: ["./pki/out/certs:/certs:ro", "./data/control:/control:ro"]
+  edge-centro:
+    <<: *edge
+    environment: {<<: *edge-env, SITE: centro}
+    networks: [iot_centro, lan_centro, wan_fibra, wan_4g]
+    ports: ["127.0.0.1:8081:8080"]
+    volumes: ["./pki/out/certs/edge-centro:/certs/edge-centro:ro", "./pki/out/crl.pem:/crl/crl.pem:ro",
+              "./data/centro/edge:/data", "./data/centro/logs:/var/log/vilaaurora"]
+
+  # ------------------------------------------------------------------ ESCOLA MUNICIPAL
+  broker-escola:
+    <<: *broker
+    networks: [iot_escola]
+    volumes:
+      - ./sites/broker/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ./sites/broker/acl:/mosquitto/config/acl:ro
+      - ./pki/out/certs/broker-escola:/mosquitto/certs:ro
+      - ./pki/out/crl.pem:/mosquitto/crl/crl.pem:ro
+      - ./data/escola/broker:/mosquitto/data
+      - ./data/escola/logs:/mosquitto/log
+  devices-escola:
+    <<: *devices
+    environment: {SITE: escola, DEVICES: "nivel-reservatorio bomba turbidez cloro fechadura"}
+    networks: [iot_escola]
+    volumes: ["./pki/out/certs:/certs:ro", "./data/control:/control:ro"]
+  edge-escola:
+    <<: *edge
+    environment: {<<: *edge-env, SITE: escola}
+    networks: [iot_escola, lan_escola, wan_fibra, wan_4g]
+    ports: ["127.0.0.1:8082:8080"]
+    volumes: ["./pki/out/certs/edge-escola:/certs/edge-escola:ro", "./pki/out/crl.pem:/crl/crl.pem:ro",
+              "./data/escola/edge:/data", "./data/escola/logs:/var/log/vilaaurora"]
+
+  # ------------------------------------------------------------------ UBS
+  broker-ubs:
+    <<: *broker
+    networks: [iot_ubs]
+    volumes:
+      - ./sites/broker/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ./sites/broker/acl:/mosquitto/config/acl:ro
+      - ./pki/out/certs/broker-ubs:/mosquitto/certs:ro
+      - ./pki/out/crl.pem:/mosquitto/crl/crl.pem:ro
+      - ./data/ubs/broker:/mosquitto/data
+      - ./data/ubs/logs:/mosquitto/log
+  devices-ubs:
+    <<: *devices
+    environment: {SITE: ubs, DEVICES: "camara-fria fechadura energia"}
+    networks: [iot_ubs]
+    volumes: ["./pki/out/certs:/certs:ro", "./data/control:/control:ro"]
+  edge-ubs:
+    <<: *edge
+    environment: {<<: *edge-env, SITE: ubs}
+    networks: [iot_ubs, lan_ubs, wan_fibra, wan_4g]
+    ports: ["127.0.0.1:8083:8080"]
+    volumes: ["./pki/out/certs/edge-ubs:/certs/edge-ubs:ro", "./pki/out/crl.pem:/crl/crl.pem:ro",
+              "./data/ubs/edge:/data", "./data/ubs/logs:/var/log/vilaaurora"]
+
+  # ------------------------------------------------------------------ HORTA E COZINHA
+  broker-horta:
+    <<: *broker
+    networks: [iot_horta]
+    volumes:
+      - ./sites/broker/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ./sites/broker/acl:/mosquitto/config/acl:ro
+      - ./pki/out/certs/broker-horta:/mosquitto/certs:ro
+      - ./pki/out/crl.pem:/mosquitto/crl/crl.pem:ro
+      - ./data/horta/broker:/mosquitto/data
+      - ./data/horta/logs:/mosquitto/log
+  devices-horta:
+    <<: *devices
+    environment: {SITE: horta, DEVICES: "nivel-reservatorio bomba umidade-solo"}
+    networks: [iot_horta]
+    volumes: ["./pki/out/certs:/certs:ro", "./data/control:/control:ro"]
+  edge-horta:
+    <<: *edge
+    environment: {<<: *edge-env, SITE: horta}
+    networks: [iot_horta, lan_horta, wan_fibra, wan_4g]
+    ports: ["127.0.0.1:8084:8080"]
+    volumes: ["./pki/out/certs/edge-horta:/certs/edge-horta:ro", "./pki/out/crl.pem:/crl/crl.pem:ro",
+              "./data/horta/edge:/data", "./data/horta/logs:/var/log/vilaaurora"]
+
+  # ------------------------------------------------------------------ ABRIGO DE EMERGÊNCIA
+  broker-abrigo:
+    <<: *broker
+    networks: [iot_abrigo]
+    volumes:
+      - ./sites/broker/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ./sites/broker/acl:/mosquitto/config/acl:ro
+      - ./pki/out/certs/broker-abrigo:/mosquitto/certs:ro
+      - ./pki/out/crl.pem:/mosquitto/crl/crl.pem:ro
+      - ./data/abrigo/broker:/mosquitto/data
+      - ./data/abrigo/logs:/mosquitto/log
+  devices-abrigo:
+    <<: *devices
+    environment: {SITE: abrigo, DEVICES: "alagamento energia gerador fechadura"}
+    networks: [iot_abrigo]
+    volumes: ["./pki/out/certs:/certs:ro", "./data/control:/control:ro"]
+  edge-abrigo:
+    <<: *edge
+    environment: {<<: *edge-env, SITE: abrigo}
+    networks: [iot_abrigo, lan_abrigo, wan_fibra, wan_4g]
+    ports: ["127.0.0.1:8085:8080"]
+    volumes: ["./pki/out/certs/edge-abrigo:/certs/edge-abrigo:ro", "./pki/out/crl.pem:/crl/crl.pem:ro",
+              "./data/abrigo/edge:/data", "./data/abrigo/logs:/var/log/vilaaurora"]
+
+x-lan: &lan
+  driver_opts:
+    # LAN do espaço: o host (operador local) alcança o painel da borda, mas sem NAT
+    # => nenhum container ganha saída para a internet por aqui.
+    com.docker.network.bridge.enable_ip_masquerade: "false"
+
+networks:
+  lan_centro: *lan
+  lan_escola: *lan
+  lan_ubs:    *lan
+  lan_horta:  *lan
+  lan_abrigo: *lan
+  iot_centro: {internal: true}
+  iot_escola: {internal: true}
+  iot_ubs:    {internal: true}
+  iot_horta:  {internal: true}
+  iot_abrigo: {internal: true}
+  # Uplinks da borda. No dia 3 passam a transportar apenas túneis WireGuard (RT-06).
+  wan_fibra: {internal: true}
+  wan_4g:    {internal: true}

@@ -1,0 +1,33 @@
+# ACL por identidade (CN do certificado = username) — menor privilégio (RT-07)
+#
+# Dispositivo <cn>: publica só a própria telemetria/estado e lê só os próprios comandos.
+pattern write dev/%u/telemetry
+pattern write dev/%u/state
+pattern write dev/%u/event
+pattern read  dev/%u/cmd
+
+# Nó de borda: lê tudo dos dispositivos, publica comandos e alarmes locais.
+user edge-centro
+topic read dev/#
+topic write dev/+/cmd
+topic readwrite site/#
+
+user edge-escola
+topic read dev/#
+topic write dev/+/cmd
+topic readwrite site/#
+
+user edge-ubs
+topic read dev/#
+topic write dev/+/cmd
+topic readwrite site/#
+
+user edge-horta
+topic read dev/#
+topic write dev/+/cmd
+topic readwrite site/#
+
+user edge-abrigo
+topic read dev/#
+topic write dev/+/cmd
+topic readwrite site/#
