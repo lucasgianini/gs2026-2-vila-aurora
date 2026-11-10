@@ -174,7 +174,8 @@ def send_cmd(device: str, action: str, origin: str, reason: str, cmd_id: str | N
            "ts": utcnow(), **extra}
     mq.publish(f"dev/{device}/cmd", json.dumps(cmd), qos=1)
     log_event("actuator_cmd", "info", device=device, action=action, origin=origin, reason=reason,
-              cmd_id=cmd["id"])
+              cmd_id=cmd["id"], requested_by=extra.get("requested_by", origin),
+              approved_by=extra.get("approved_by"), hour_local=datetime.now().hour)
     outbox.put("actuator_cmd", device, {"ts": cmd["ts"], **cmd, "device": device}, priority=1)
 
 
@@ -324,6 +325,22 @@ def try_uplinks(fn):
     return None
 
 
+_last_skew = {"t": 0.0}
+
+
+def check_clock(r: httpx.Response) -> None:
+    """Desvio de relógio borda x nuvem. > 2 s gera evento (logs fora de ordem atrapalham a forense)."""
+    from email.utils import parsedate_to_datetime
+    if time.time() - _last_skew["t"] < 60 or "date" not in r.headers:
+        return
+    _last_skew["t"] = time.time()
+    skew = (datetime.now(timezone.utc) - parsedate_to_datetime(r.headers["date"])).total_seconds()
+    with state_lock:
+        state["clock_skew_s"] = round(skew, 3)
+    if abs(skew) > 2.0:
+        log_event("clock_skew", "warning", skew_s=round(skew, 3))
+
+
 def flush_once() -> int:
     def go(base: str, degraded: bool) -> int:
         sent = 0
@@ -337,6 +354,7 @@ def flush_once() -> int:
             raw = json.dumps(body).encode()
             r = http.post(f"{base}/api/v1/ingest", content=raw, headers={"content-type": "application/json"})
             r.raise_for_status()
+            check_clock(r)
             outbox.ack(r.json().get("acked", []))
             with state_lock:
                 key = "4g" if degraded else "fibra"
@@ -406,8 +424,8 @@ def handle_remote(c: dict) -> tuple[bool, str]:
         state["pump_auto"] = True
         log_event("safe_mode", "notice", **base)
         return True, "ok"
-    send_cmd(dev, action, f"remote:{who}", c.get("reason", "comando remoto"), cmd_id=c.get("id"),
-             approved_by=c.get("approved_by"))
+    send_cmd(dev, action, "remote", c.get("reason", "comando remoto"), cmd_id=c.get("id"),
+             approved_by=c.get("approved_by"), requested_by=who)
     return True, "ok"
 
 

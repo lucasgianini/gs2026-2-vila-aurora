@@ -1,0 +1,137 @@
+<!--
+  Regras da Rede Vila Aurora (RT-13). IDs 100000–100999.
+  Grupos usados pelo SOAR:  va_a_vpn  va_b_sqli  va_c_cert  va_d_atuador
+  Nível: 3-6 informativo · 7-9 atenção · 10-11 alerta · 12+ incidente provável
+-->
+<group name="vilaaurora,">
+
+  <!-- ========== bases por aplicação (JSON) ========== -->
+  <rule id="100000" level="0"><decoded_as>json</decoded_as><field name="app">^va-edge$</field><description>Vila Aurora: evento da borda</description></rule>
+  <rule id="100001" level="0"><decoded_as>json</decoded_as><field name="app">^va-ingest$</field><description>Vila Aurora: evento do ingest</description></rule>
+  <rule id="100002" level="0"><decoded_as>json</decoded_as><field name="app">^va-ingest-gw$</field><description>Vila Aurora: gateway mTLS do ingest</description></rule>
+  <rule id="100003" level="0"><decoded_as>json</decoded_as><field name="app">^va-painel$</field><description>Vila Aurora: evento do painel</description></rule>
+  <rule id="100004" level="0"><decoded_as>json</decoded_as><field name="app" type="pcre2">^va-painel(-legado)?-gw$</field><description>Vila Aurora: acesso HTTP ao painel</description></rule>
+  <rule id="100005" level="0"><decoded_as>json</decoded_as><field name="app">^va-vpn$</field><description>Vila Aurora: hub VPN</description></rule>
+  <rule id="100006" level="0"><decoded_as>json</decoded_as><field name="app">^va-soar$</field><description>Vila Aurora: SOAR</description></rule>
+  <rule id="100007" level="0"><decoded_as>json</decoded_as><field name="app">^va-ai$</field><description>Vila Aurora: IA defensiva</description></rule>
+  <rule id="100008" level="0"><decoded_as>json</decoded_as><field name="dbname">^vilaaurora$</field><description>Vila Aurora: PostgreSQL</description></rule>
+
+  <!-- ========== operação ========== -->
+  <rule id="100010" level="10"><if_sid>100000</if_sid><field name="event">^local_alarm$</field><field name="severity">^critical$</field>
+    <description>Alarme CRÍTICO local em $(site): $(message)</description><group>va_operacao,</group></rule>
+  <rule id="100011" level="7"><if_sid>100000</if_sid><field name="event">^local_alarm$</field><field name="severity">^high$</field>
+    <description>Alarme local em $(site): $(message)</description><group>va_operacao,</group></rule>
+  <rule id="100012" level="6"><if_sid>100000</if_sid><field name="event">^wan_link_change$</field><field name="current" type="pcre2">^(4g|offline)$</field>
+    <description>Borda $(site) operando em modo degradado (link: $(current))</description><group>va_resiliencia,</group></rule>
+  <rule id="100013" level="8"><if_sid>100000</if_sid><field name="event">^clock_skew$</field>
+    <description>Relógio da borda $(site) desviado $(skew_s) s da nuvem (NTP)</description><group>va_tempo,</group></rule>
+  <rule id="100014" level="9"><if_sid>100000</if_sid><field name="event">^outbox_overflow$</field>
+    <description>Buffer da borda $(site) cheio: telemetria descartada</description><group>va_resiliencia,</group></rule>
+
+  <!-- ========== (a) login VPN anômalo ========== -->
+  <rule id="100100" level="3"><if_sid>100005</if_sid><field name="event">^vpn_handshake$</field>
+    <description>Sessão VPN iniciada: $(peer) via $(iface) de $(src_ip)</description><group>va_vpn,</group></rule>
+  <rule id="100101" level="12"><if_sid>100100</if_sid><field name="iface">^wg2$</field>
+    <list field="src_ip" lookup="not_address_match_key">etc/lists/va-vpn-known-ips</list>
+    <description>(a) VPN administrativa: $(peer) conectou de origem desconhecida $(src_ip)</description>
+    <mitre><id>T1133</id><id>T1078</id></mitre><group>va_a_vpn,</group></rule>
+  <rule id="100102" level="10"><if_sid>100100</if_sid><field name="iface">^wg2$</field><field name="hour_local" type="pcre2">^([0-5])$</field>
+    <description>(a) VPN administrativa fora do horário: $(peer) às $(hour_local)h</description>
+    <mitre><id>T1133</id></mitre><group>va_a_vpn,</group></rule>
+  <rule id="100103" level="5"><if_sid>100005</if_sid><field name="event">^vpn_mfa_failure$</field>
+    <description>Falha de MFA na VPN: usuário $(user) no túnel $(tunnel_ip) (dono da chave: $(key_owner))</description><group>va_vpn,</group></rule>
+  <rule id="100104" level="10" frequency="3" timeframe="120"><if_matched_sid>100103</if_matched_sid><same_field>tunnel_ip</same_field>
+    <description>(a) Várias falhas de MFA na VPN pelo túnel $(tunnel_ip)</description><mitre><id>T1110</id></mitre><group>va_a_vpn,</group></rule>
+  <rule id="100105" level="12"><if_sid>100005</if_sid><field name="event">^vpn_mfa_success$</field><field name="hour_local" type="pcre2">^([0-5])$</field>
+    <description>(a) MFA da VPN aprovado de madrugada: $(user) às $(hour_local)h</description><mitre><id>T1078</id></mitre><group>va_a_vpn,</group></rule>
+  <!-- VPN legada (só senha) -->
+  <rule id="100110" level="8"><decoded_as>va-vpn-legado</decoded_as><status>^OK$</status>
+    <description>(a) Login na VPN LEGADA (só senha): $(dstuser) de $(srcip)</description><mitre><id>T1133</id></mitre><group>va_a_vpn,authentication_success,</group></rule>
+  <rule id="100111" level="12"><if_sid>100110</if_sid><list field="srcip" lookup="not_address_match_key">etc/lists/va-vpn-known-ips</list>
+    <description>(a) VPN legada: $(dstuser) autenticou de IP externo desconhecido $(srcip)</description>
+    <mitre><id>T1133</id><id>T1078</id></mitre><group>va_a_vpn,</group></rule>
+  <rule id="100112" level="13"><if_sid>100111</if_sid><field name="hour_local" type="pcre2">^([0-5])$</field>
+    <description>(a) VPN legada: login de origem desconhecida de madrugada ($(dstuser), $(srcip), $(hour_local)h)</description>
+    <mitre><id>T1133</id><id>T1078</id></mitre><group>va_a_vpn,</group></rule>
+  <rule id="100113" level="5"><decoded_as>va-vpn-legado</decoded_as><status>^FAIL$</status>
+    <description>Falha de login na VPN legada: $(dstuser) de $(srcip)</description><group>va_vpn,authentication_failed,</group></rule>
+  <rule id="100114" level="10" frequency="5" timeframe="120"><if_matched_sid>100113</if_matched_sid><same_source_ip/>
+    <description>(a) Força bruta na VPN legada a partir de $(srcip)</description><mitre><id>T1110</id></mitre><group>va_a_vpn,</group></rule>
+
+  <!-- ========== (b) SQL Injection ========== -->
+  <rule id="100200" level="12"><if_sid>100004</if_sid>
+    <field name="uri" type="pcre2">(?i)((%27|')(\s|%20|\+)*(or|and|union|;|--|%3b|\))|union(\s|%20|\+|/\*.*\*/)+(all(\s|%20|\+)+)?select|pg_sleep|information_schema|pg_catalog|%3b(\s|%20|\+)*(update|delete|drop|insert))</field>
+    <description>(b) Padrão de SQL Injection na requisição ao painel de $(remote): $(uri)</description>
+    <mitre><id>T1190</id></mitre><group>va_b_sqli,attack,</group></rule>
+  <rule id="100201" level="12"><if_sid>100004</if_sid><field name="ua" type="pcre2">(?i)(sqlmap|havij|sqlninja)</field>
+    <description>(b) Ferramenta de SQL Injection detectada ($(ua)) de $(remote)</description>
+    <mitre><id>T1190</id><id>T1595.002</id></mitre><group>va_b_sqli,attack,</group></rule>
+  <rule id="100206" level="13"><if_sid>100200</if_sid><field name="ua" type="pcre2">(?i)(sqlmap|havij|sqlninja)</field>
+    <description>(b) SQL Injection AUTOMATIZADO ($(ua)) de $(remote): $(uri)</description>
+    <mitre><id>T1190</id><id>T1595.002</id></mitre><group>va_b_sqli,attack,</group></rule>
+  <rule id="100202" level="10"><if_sid>100003</if_sid><field name="event">^input_rejected$</field>
+    <field name="q" type="pcre2">(?i)('|--|;|union|select|sleep|/\*)</field>
+    <description>(b) Tentativa de SQLi bloqueada pela validação do painel (usuário $(user), IP $(src_ip))</description>
+    <mitre><id>T1190</id></mitre><group>va_b_sqli,</group></rule>
+  <rule id="100203" level="12"><if_sid>100003</if_sid><field name="event">^sql_error$</field>
+    <description>(b) Erro de SQL provocado por entrada do usuário no painel ($(variant))</description>
+    <mitre><id>T1190</id></mitre><group>va_b_sqli,</group></rule>
+  <rule id="100204" level="13"><if_sid>100008</if_sid><field name="application_name">^painel-legado$</field>
+    <field name="message" type="pcre2">(?i)(union.+select.+cadastro\.|update\s+ops\.pump_schedule|information_schema|pg_sleep)</field>
+    <description>(b) Banco executou SQL injetado pelo painel legado: $(message)</description>
+    <mitre><id>T1190</id><id>T1565.001</id></mitre><group>va_b_sqli,</group></rule>
+  <rule id="100205" level="12" frequency="20" timeframe="60"><if_matched_sid>100004</if_matched_sid><same_field>remote</same_field>
+    <field name="uri" type="pcre2">^/acessos\?</field>
+    <description>(b) Volume anormal de buscas no histórico de acessos a partir de $(remote) (automação/extração)</description>
+    <mitre><id>T1190</id><id>T1119</id></mitre><group>va_b_sqli,</group></rule>
+
+  <!-- ========== (c) dispositivo sem certificado válido ========== -->
+  <rule id="100300" level="10"><decoded_as>va-mosquitto-tls</decoded_as><field name="tls_error" type="pcre2">(?i)certificate (verify failed|revoked)|no certificate|peer did not return a certificate</field>
+    <description>(c) Broker MQTT recusou cliente sem certificado válido ($(tls_error)) em $(location)</description>
+    <mitre><id>T1557</id><id>T0848</id></mitre><group>va_c_cert,</group></rule>
+  <rule id="100301" level="12" frequency="5" timeframe="60"><if_matched_sid>100300</if_matched_sid>
+    <description>(c) Tentativas repetidas de conexão MQTT com certificado inválido</description><mitre><id>T0848</id></mitre><group>va_c_cert,</group></rule>
+  <rule id="100302" level="10"><if_sid>100002</if_sid><field name="verify" type="pcre2">^FAILED</field>
+    <description>(c) Ingest recusou certificado de cliente de $(remote): $(verify)</description><mitre><id>T1557</id></mitre><group>va_c_cert,</group></rule>
+  <rule id="100303" level="12"><if_sid>100001</if_sid><field name="event" type="pcre2">^(auth_denied|identity_mismatch|foreign_device)$</field>
+    <description>(c) Ingest: identidade de certificado inconsistente ($(event)) cn=$(cn)</description><mitre><id>T1036</id></mitre><group>va_c_cert,</group></rule>
+  <rule id="100304" level="12"><if_sid>100000</if_sid><field name="event">^mqtt_identity_mismatch$</field>
+    <description>(c) Dispositivo publicou dados em nome de outro ($(claimed)) em $(site)</description><mitre><id>T0856</id></mitre><group>va_c_cert,</group></rule>
+
+  <!-- ========== (d) comando de atuador fora do horário/perfil ========== -->
+  <rule id="100400" level="3"><if_sid>100000</if_sid><field name="event">^actuator_cmd$</field>
+    <description>Comando de atuador: $(device) $(action) (origem $(origin))</description><group>va_atuador,</group></rule>
+  <rule id="100401" level="10"><if_sid>100400</if_sid><field name="origin">^remote$</field><field name="hour_local" type="pcre2">^([0-5]|22|23)$</field>
+    <description>(d) Comando REMOTO de atuador fora do horário: $(device) $(action) por $(requested_by) às $(hour_local)h</description>
+    <mitre><id>T0855</id></mitre><group>va_d_atuador,</group></rule>
+  <rule id="100402" level="12"><if_sid>100400</if_sid><field name="origin">^remote$</field>
+    <list field="requested_by" lookup="not_match_key">etc/lists/va-cmd-requesters</list>
+    <description>(d) Comando de atuador por perfil não autorizado: $(requested_by) -> $(device) $(action)</description>
+    <mitre><id>T0855</id><id>T1078</id></mitre><group>va_d_atuador,</group></rule>
+  <rule id="100403" level="12"><if_sid>100000</if_sid><field name="event">^actuator_cmd_rejected$</field>
+    <description>(d) Borda $(site) RECUSOU comando inseguro: $(action) em $(device) por $(requested_by) — $(reason)</description>
+    <mitre><id>T0855</id><id>T0836</id></mitre><group>va_d_atuador,</group></rule>
+  <rule id="100404" level="9"><if_sid>100003</if_sid><field name="event">^schedule_changed$</field>
+    <description>Agenda da bomba alterada no painel: $(site) -> $(windows) por $(user)</description><group>va_atuador,</group></rule>
+  <rule id="100405" level="11"><if_sid>100003</if_sid><field name="event">^command_created$</field><field name="risk">^alto$</field>
+    <field name="hour" type="pcre2">^([0-5]|22|23)$</field>
+    <description>(d) Ação de alto impacto solicitada fora do horário: $(device) $(action) por $(user)</description>
+    <mitre><id>T0855</id></mitre><group>va_d_atuador,</group></rule>
+
+  <!-- ========== painel: autenticação ========== -->
+  <rule id="100500" level="5"><if_sid>100003</if_sid><field name="event" type="pcre2">^(login_failure|mfa_failure)$</field>
+    <description>Falha de login no painel: $(username) de $(src_ip)</description><group>authentication_failed,va_painel,</group></rule>
+  <rule id="100501" level="10" frequency="5" timeframe="120"><if_matched_sid>100500</if_matched_sid><same_field>src_ip</same_field>
+    <description>Força bruta no painel a partir de $(src_ip)</description><mitre><id>T1110</id></mitre><group>va_painel,</group></rule>
+  <rule id="100502" level="9"><if_sid>100003</if_sid><field name="event">^login_success$</field><field name="variant">^legado$</field>
+    <description>Login no painel LEGADO (sem MFA): $(username) de $(src_ip)</description><mitre><id>T1078</id></mitre><group>va_painel,</group></rule>
+
+  <!-- ========== SOAR e IA ========== -->
+  <rule id="100600" level="5"><if_sid>100006</if_sid><description>SOAR: $(action) — $(result)</description><group>va_soar,</group></rule>
+  <rule id="100700" level="8"><if_sid>100007</if_sid><field name="event">^anomaly$</field>
+    <description>IA: anomalia na telemetria de $(device) (score $(score))</description><group>va_ia,</group></rule>
+  <rule id="100701" level="10"><if_sid>100007</if_sid><field name="event">^phishing_suspeito$</field>
+    <description>IA: e-mail classificado como phishing ($(verdict)) — $(subject)</description><mitre><id>T1566</id></mitre><group>va_ia,</group></rule>
+  <rule id="100702" level="11"><if_sid>100007</if_sid><field name="event">^prompt_injection_blocked$</field>
+    <description>IA: tentativa de prompt injection bloqueada ($(vector))</description><mitre><id>AML.T0051</id></mitre><group>va_ia,</group></rule>
+</group>

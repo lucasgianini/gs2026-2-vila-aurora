@@ -311,6 +311,19 @@ services:
     volumes: ["./vpn/out:/vpn:ro"]
     depends_on: [vpn-hub]
 
+  # ================================================================== SIEM (RT-12/13)
+  siem:
+    image: wazuh/wazuh-manager:4.9.2
+    hostname: siem
+    restart: unless-stopped
+    environment: {TZ: America/Sao_Paulo}
+    mem_limit: 1500m
+    networks: [cloud_svc]
+    volumes:
+      - ./siem/etc:/wazuh-config-mount/etc:ro
+      - ./data:/logs/va:ro
+      - wazuh_logs:/var/ossec/logs
+
   # ================================================================== LEGADO (só reprodução do INC-VA-0712)
   painel-legado-app:
     image: vilaaurora/painel:dev
@@ -354,6 +367,9 @@ services:
       - ./pki/out/certs/vpn-legado:/certs:ro
       - ./vpn/out/legado-users:/vpn-legado/users:ro
       - ./data/cloud/logs:/var/log/vilaaurora
+
+volumes:
+  wazuh_logs: {}
 
 x-lan: &lan
   driver_opts:

@@ -1,0 +1,25 @@
+<!-- Decoders para logs em texto (Mosquitto e VPN legada). Logs JSON usam o decoder json nativo. -->
+<decoder name="va-mosquitto-conn">
+  <prematch>New connection from </prematch>
+  <regex offset="after_prematch" type="pcre2">^(\d+\.\d+\.\d+\.\d+):(\d+) on port (\d+)</regex>
+  <order>srcip, srcport, dstport</order>
+</decoder>
+<decoder name="va-mosquitto-client">
+  <prematch>New client connected from </prematch>
+  <regex offset="after_prematch" type="pcre2">^(\d+\.\d+\.\d+\.\d+):\d+ as (\S+) </regex>
+  <order>srcip, device</order>
+</decoder>
+<decoder name="va-mosquitto-tls">
+  <prematch>OpenSSL Error[</prematch>
+  <regex offset="after_prematch" type="pcre2">^\d+\]: (.+)$</regex>
+  <order>tls_error</order>
+</decoder>
+
+<decoder name="va-vpn-legado">
+  <prematch>LEGACY-VPN AUTH </prematch>
+</decoder>
+<decoder name="va-vpn-legado-fields">
+  <parent>va-vpn-legado</parent>
+  <regex type="pcre2">AUTH (\S+) user=(\S+) src=(\S+) hour_local=(\d+)</regex>
+  <order>status, dstuser, srcip, hour_local</order>
+</decoder>

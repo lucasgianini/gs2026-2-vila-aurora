@@ -19,6 +19,7 @@ legado-users: ## (após o 1º up) usuários da VPN legada = senhas do painel (re
 dirs:
 	@mkdir -p data/control data/cloud/db data/cloud/logs/pg secrets $(foreach s,$(SITES),data/$(s)/broker data/$(s)/edge data/$(s)/logs)
 	@[ -f data/control/faults.json ] || echo '{}' > data/control/faults.json
+	@touch data/cloud/logs/soar.jsonl data/cloud/logs/ai.jsonl data/cloud/logs/painel-legado-gw.jsonl data/cloud/logs/vpn-legado.log
 
 up: dirs ## sobe o laboratório
 	docker compose up -d --build
