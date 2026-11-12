@@ -9,17 +9,11 @@ A decisão central é que **cada espaço comunitário opera por conta própria**
 consolidador — não um ponto único de falha. Foi essa dependência da nuvem que, no INC-VA-0712,
 deixou a câmara fria de vacinas sem alarme quando a fibra caiu.
 
-```
-  CAMPO              BORDA (1 por espaco)          NUVEM                 SUPERVISAO
- +-----------+      +--------------------+       +---------------+     +--------------+
- | sensores  | MQTT | broker local       |  WG   | ingest (mTLS) |     | painel web   |
- | atuadores |mTLS  | regras locais      | mTLS  | PostgreSQL    |     | (MFA + RBAC) |
- | fechadura |=====>| store-and-forward  |======>| SOAR . IA     |<====| console SOC  |
- +-----------+ TLS  | painel local       | fibra | SIEM (Wazuh)  | VPN +--------------+
-   cert X.509       +--------------------+  / 4G  +---------------+ adm  so via VPN+MFA
-   por dispositivo   cert X.509 por no            CA propria           WireGuard + TOTP
-                     intertravamentos             menor privilegio
-```
+![Arquitetura em camadas da Rede Vila Aurora: campo, borda, nuvem e supervisão](img/arquitetura.png)
+
+*Figura 1 — Arquitetura em camadas. Campo fala com a borda por MQTT com mTLS; a borda fala com a nuvem
+por WireGuard sobre fibra ou 4G; a supervisão chega à nuvem apenas por VPN com MFA. Fonte editável:
+`docs/img/arquitetura.svg`.*
 
 Cada seta é autenticada com certificado em ambas as pontas (mTLS); nenhuma porta administrativa
 fica exposta à internet.
@@ -42,7 +36,8 @@ privilégio mínimo por serviço; SIEM (Wazuh) com coleta centralizada e NTP; SO
 baixo risco automáticas e aprovação humana para alto impacto; IA defensiva (detecção de anomalias e
 triagem de e-mails). No protótipo roda em containers; em produção seria uma VM/servidor do laboratório.
 
-**Supervisão.** Painel web acessível **apenas pela VPN administrativa com MFA**, com RBAC (operador,
+**Supervisão.** Painel web acessível **apenas pela VPN administrativa com MFA**, atrás de um gateway
+HTTPS com WAF mínimo (assinaturas de SQL Injection), com RBAC (operador,
 técnico, coordenação, auditor), console do SOC e painel local em cada borda para operação offline.
 
 ## 3. Fluxos de dados principais
@@ -70,6 +65,7 @@ por WireGuard e nunca umas às outras; o acesso administrativo ao painel/SIEM ex
 | WireGuard em vez de VPN legada | Chave por dispositivo/pessoa, credencial não-phishável | Gestão de chaves/PKI própria |
 | CA própria + mTLS em tudo | Identidade forte, revogação, sem segredo compartilhado | Complexidade de PKI (rotação, CRL) |
 | Painel parametrizado + versão legada só em lab | Demonstrar antes/depois do SQLi com segurança | Manter duas variantes no código |
+| WAF por assinaturas no nginx, e não ModSecurity/CRS | Camada adicional simples de manter por voluntários; a correção real é a parametrização | Cobertura limitada e contornável por ofuscação |
 | SOAR com aprovação humana p/ alto impacto | Evitar que automação desligue bomba numa enchente | Resposta um pouco mais lenta nesses casos |
 | IA complementar, nunca atuando | LLM/anomalia não podem acionar físico (RT-17) | IA não substitui as regras determinísticas |
 | Tudo em containers | Reprodutível, barato, atende ao enunciado | Memória forense limitada vs. VM |

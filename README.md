@@ -20,7 +20,8 @@ responder e investigar** incidentes como o INC-VA-0712.
 | E4 | Laudo Forense do INC-VA-0712 | `forensics/cases/INC-VA-0712/` |
 
 Documentos de apoio: custos (`docs/03`), privacidade/RIPD (`docs/04`), acessibilidade (`docs/05`),
-uso de IA (`docs/07-uso-de-ia.md`).
+plano de conscientização (`docs/09`), uso de IA (`docs/07-uso-de-ia.md`). Índice e rastreabilidade
+requisito → evidência: `docs/00-indice.md`. PDFs de entrega: `scripts/build-pdf.sh <nº do grupo>`.
 
 ## Pré-requisitos
 
@@ -63,6 +64,7 @@ maliciosa** — mesmo com o painel e o banco comprometidos, o reservatório fica
 ## Testes de segurança (E3)
 
 ```bash
+tests/t01_sqli_antes_depois.sh  # SQLi antes/depois: payloads + sqlmap, WAF, privilégio mínimo (27 verificações; perfil legado)
 tests/t03_vpn_segmentacao.sh    # mTLS, segmentação, MFA da VPN, failover (13 verificações)
 tests/t04_siem_regras.sh        # valida as 4 regras de detecção (wazuh-logtest)
 tests/t05_soar_aprovacao.sh <id># ação de alto impacto só executa após aprovação humana
@@ -70,6 +72,7 @@ tests/t05_soar_aprovacao.sh <id># ação de alto impacto só executa após aprov
 .venv/bin/python cloud/ai/triagem_llm.py    # triagem por LLM com guardrails
 .venv/bin/python phishing/check_email_auth.py  # SPF/DKIM/DMARC
 chaos/wan_down.sh 30            # teste de caos: WAN fora 30 min + reconciliação
+metrics/collect.py 300 5 && metrics/medir_4g.sh escola 300 && python3 metrics/report.py   # métricas (RT-22)
 ```
 
 ## Estrutura

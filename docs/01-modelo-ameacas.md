@@ -30,7 +30,7 @@ Cada falha do incidente tem pelo menos um controle preventivo **e** um detectivo
 
 | # | Falha que permitiu o ataque | Controle preventivo | Controle detectivo/resposta | RT |
 |---|---|---|---|---|
-| F1 | E-mail "da prefeitura" com texto gerado por IA aceito como legítimo | SPF/DKIM/DMARC `p=quarantine`; banner de remetente externo; triagem de e-mails por LLM | Métricas da campanha Gophish; reporte de phishing com 1 clique | RT-10, RT-16, RT-18 |
+| F1 | E-mail "da prefeitura" com texto gerado por IA aceito como legítimo | SPF/DKIM/DMARC `p=quarantine`; triagem de e-mails por LLM; banner de remetente externo (recomendado no servidor de e-mail, fora do protótipo) | Métricas da campanha Gophish; reporte de phishing com 1 clique | RT-10, RT-16, RT-18 |
 | F2 | Áudio com voz clonada reforçou a urgência | Palavra-código e **verificação fora de banda** (ligar de volta para número do cadastro) para pedidos urgentes | Registro de pedidos urgentes no painel | RT-18 |
 | F3 | Credencial digitada em página falsa era suficiente | MFA (TOTP) no painel; WireGuard com chave por pessoa (credencial não-phishável); sem VPN por senha | Alerta de login de origem/horário anômalo | RT-06, RT-09 |
 | F4 | VPN legada só com senha, exposta | Remoção da VPN legada; WireGuard + MFA; nenhuma porta administrativa exposta | Regra (a): login VPN anômalo | RT-06 |

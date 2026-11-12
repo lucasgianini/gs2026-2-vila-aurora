@@ -46,6 +46,12 @@ Nove fontes, mais dados voláteis de um nó (ver cadeia de custódia para hashes
 A integridade é verificável a qualquer momento recalculando os hashes e comparando com a cadeia de
 custódia; o manifesto selado detecta alteração de qualquer item.
 
+A linha do tempo completa está no **Anexo 1**, a cadeia de custódia (quem coletou, quando, de onde, hash e
+tamanho de cada item) no **Anexo 2** e o manifesto SHA-256 com o selo no **Anexo 3**. Para conferir:
+`cd forensics/cases/INC-VA-0712/raw && sha256sum -c ../manifesto-sha256.txt`. Os arquivos brutos (cerca de 15 MB)
+não são versionados no repositório público: ficam sob guarda da equipe, e uma nova coleta
+(`forensics/coletar.sh`) gera outro caso, com hashes próprios.
+
 ## 4. Linha do tempo (resumo)
 
 A linha do tempo completa e correlacionada está em `linha-do-tempo.md`. Em resumo:

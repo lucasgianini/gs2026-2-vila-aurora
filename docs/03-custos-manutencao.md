@@ -31,7 +31,8 @@ implantação cai para a faixa de **R$ 12.000–15.000**.
 | Certificado/domínio (domínio `.test` é fictício; em produção, domínio real) | — | 60 | ~R$ 60/ano |
 | Manutenção técnica (visitas trimestrais + suporte) | 400 | 4.800 | voluntário técnico + fundo |
 | Reserva para reposição de hardware (sensores, cartões) | 100 | 1.200 | ~5% do CAPEX/ano |
-| **Total de operação (12 meses)** | | **11.580** | **R$ 9.780 com VM cedida** |
+| Material de conscientização (cartazes, listas impressas) | 20 | 240 | plano em `docs/09` |
+| **Total de operação (12 meses)** | | **11.820** | **R$ 10.020 com VM cedida** |
 
 Software é 100% livre (Linux, Mosquitto, PostgreSQL, WireGuard, Wazuh, Gophish, Ollama, OpenSSL),
 então não há custo de licença. A IA roda **localmente** (Ollama), sem custo por chamada nem envio de
@@ -43,10 +44,10 @@ dados para fora — o que também favorece a LGPD.
 |---|---|---|
 | Contínuo | SIEM coleta logs; SOAR responde a baixo risco; backup diário do banco | Automático |
 | Semanal | Revisar alertas do SOC; conferir alarmes e filas (outbox) das bordas | Técnico voluntário |
-| Mensal | Reunião da equipe; atualizar palavra-código; revisar lista de acessos | Coordenação |
-| Trimestral | Atualização de firmware/pacotes; teste de restauração de backup; simulado de resposta | Técnico |
+| Mensal | Reunião da equipe com momento de segurança; trocar a palavra-código; revisar lista de acessos | Coordenação |
+| Trimestral | Atualização de firmware/pacotes; teste de restauração de backup; simulado de resposta; simulação de phishing (`docs/09`) | Técnico |
 | Semestral | **Rotação de certificados** de dispositivos e revisão da PKI; teste de caos | Técnico |
-| Anual | Revisão do RIPD e do modelo de ameaças; troca presencial de senhas; campanha de conscientização | Coordenação + técnico |
+| Anual | Revisão do RIPD e do modelo de ameaças; troca presencial de senhas; balanço do plano de conscientização | Coordenação + técnico |
 
 **Responsáveis.** A manutenção é feita por voluntários com apoio técnico pontual. Pontos críticos
 (PKI, backups, SIEM) têm pelo menos duas pessoas capazes de operar, para não depender de uma só.
