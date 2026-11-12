@@ -1,0 +1,77 @@
+Teste executado em 2026-11-12T01:41:15Z · 1.9.11#pip
+
+== ANTES — painel legado (vulnerável, só em laboratório)
+  payload 1 (UNION):     q=x' UNION SELECT now(),nome,email,telefone,true,papel FROM cadastro.pessoas--
+      vazado (sintético): camargoolivia@ig.com.br
+      vazado (sintético): camaralaura@bol.com.br
+      vazado (sintético): yan86@yahoo.com.br
+  [OK]   legado: UNION extrai o cadastro (40 e-mails sintéticos vazados)
+  payload 2 (erro):      q=x'
+      resposta: Erro: unterminated quoted string at or near &#34;&#39; ORDER BY ts DESC LIMIT 100&#34;
+  [OK]   legado: erro do banco devolvido ao usuário (vazamento de detalhes)
+  payload 3 (empilhado): q=x'; SELECT pg_sleep(3);--
+      tempo de resposta: 3399 ms (pg_sleep(3) executado pelo banco)
+  [OK]   legado: comandos empilhados são executados
+  sqlmap (automático) contra o painel legado — log completo em docs/evidencias/sqlmap/legado.log
+      Parameter: q (GET)
+          Type: UNION query
+          Title: Generic UNION query (NULL) - 6 columns
+      current user: 'va_painel_legado'
+      [2 tables]
+      Table: pessoas
+      [3 entries]
+  [OK]   legado: sqlmap confirma o parâmetro q como injetável
+  [OK]   legado: sqlmap extrai linhas de cadastro.pessoas
+
+== DEPOIS — painel corrigido (mesmos payloads)
+  [OK]   MFA da VPN administrativa (=200)
+  [OK]   login no painel (senha + TOTP, perfil auditor) (=302)
+  -- camada 1: WAF no gateway (nginx)
+  [OK]   busca legítima (q=fechadura) passa pelo WAF (=200)
+  [OK]   payload 1 (UNION) barrado no gateway (=403)
+  [OK]   payload 3 (empilhado) barrado no gateway (=403)
+  [OK]   payload 2 (aspa solta) não é assinatura do WAF: segue para a aplicação (=200)
+  -- camada 2: aplicação SEM o WAF na frente (validação + consulta parametrizada)
+      payload UNION -> mensagem ao usuário: "Use apenas letras, números, espaço ou hífen (até 40 caracteres)." · e-mails vazados: 0 · tempo: 410 ms
+  [OK]   corrigido: payload UNION recusado, mensagem genérica, nada executado
+      payload erro -> mensagem ao usuário: "Use apenas letras, números, espaço ou hífen (até 40 caracteres)." · e-mails vazados: 0 · tempo: 346 ms
+  [OK]   corrigido: payload erro recusado, mensagem genérica, nada executado
+      payload empilhado -> mensagem ao usuário: "Use apenas letras, números, espaço ou hífen (até 40 caracteres)." · e-mails vazados: 0 · tempo: 372 ms
+  [OK]   corrigido: payload empilhado recusado, mensagem genérica, nada executado
+  [OK]   corrigido: busca legítima continua funcionando (100 linhas)
+  sqlmap direto na aplicação (sem WAF), level 3 / risk 2, parâmetros q, site e dia — log em docs/evidencias/sqlmap/corrigido-app.log
+      [01:41:37] [WARNING] GET parameter 'q' does not seem to be injectable
+      [01:41:39] [WARNING] GET parameter 'site' does not seem to be injectable
+      [01:41:40] [WARNING] GET parameter 'dia' does not seem to be injectable
+      [01:41:40] [ERROR] all tested parameters do not appear to be injectable. Try to increase values for '--level'/'--risk' options if you wish to perform more tests. If you suspect that there is some kind of protection mechanism involved (e.g. WAF) maybe you could try to use option '--tamper' (e.g. '--tamper=space2comment') and/or switch '--random-agent', skipping to the next target
+  [OK]   corrigido: sqlmap NÃO encontra injeção em nenhum parâmetro
+  sqlmap pelo caminho real (VPN + gateway com WAF) — log em docs/evidencias/sqlmap/corrigido-gw.log
+      [01:41:41] [CRITICAL] heuristics detected that the target is protected by some kind of WAF/IPS
+      [01:41:41] [INFO] checking if the target is protected by some kind of WAF/IPS
+      [01:41:42] [ERROR] all tested parameters do not appear to be injectable. Try to increase values for '--level'/'--risk' options if you wish to perform more tests. If you 
+      [01:41:42] [WARNING] GET parameter 'q' does not seem to be injectable
+      403 (Forbidden) - 23 times
+  [OK]   corrigido: sqlmap pelo gateway também não encontra injeção
+  [OK]   WAF registrou 104 requisições barradas (painel-gw.jsonl, "waf":"1")
+  -- camada 3: privilégio mínimo do usuário de banco (va_painel x va_painel_legado)
+  [OK]   va_painel lê cadastro.pessoas (tabela com contatos) (=f)
+  [OK]   va_painel_legado lê cadastro.pessoas (=t)
+  [OK]   va_painel pode apagar/alterar o histórico de acessos (=f)
+  [OK]   va_painel pode alterar a trilha de auditoria (=f)
+  [OK]   va_painel pode criar objetos (DDL) no schema ops (=f)
+  -- camada 4: detecção no SIEM durante o teste (regras (b), grupo va_b_sqli)
+      regra 100200 (nível 12):     4 alertas — (b) Padrão de SQL Injection na requisição ao painel de 10.
+      regra 100201 (nível 12):    48 alertas — (b) Ferramenta de SQL Injection detectada (sqlmap/1.9.11#p
+      regra 100202 (nível 10):   332 alertas — (b) Tentativa de SQLi bloqueada pela validação do painel (
+      regra 100203 (nível 12):    13 alertas — (b) Erro de SQL provocado por entrada do usuário no painel
+      regra 100204 (nível 13):     6 alertas — (b) Banco executou SQL injetado pelo painel legado: statem
+      regra 100206 (nível 13):    54 alertas — (b) SQL Injection AUTOMATIZADO (sqlmap/1.9.11#pip (https:/
+TOTAL 457 6
+  [OK]   SIEM gerou 457 alertas de SQLi durante o teste
+  -- camada 5: resposta automática (SOAR religado; um único payload pelo caminho real)
+  [OK]   payload 1 (UNION) pelo gateway (=403)
+      revogar_sessao_vpn -> 10.90.0.12 · executada · sessões encerradas: ['10.90.0.12']
+  [OK]   SOAR encerrou a sessão VPN de origem (=1)
+  [OK]   painel inacessível após a contenção (sessão administrativa encerrada) (=000)
+      revogar_sessao_vpn: MTTD 2.04 s · MTTR 3.2 s (evento -> contenção)
+== Resultado: 0 falha(s)

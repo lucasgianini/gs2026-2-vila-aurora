@@ -1,0 +1,32 @@
+[1/1] URL:
+GET https://10.90.0.1/acessos?q=porta&site=escola
+Cookie: __Host-va=<removido>
+do you want to test this URL? [Y/n/q]
+> Y
+[01:41:41] [INFO] testing URL 'https://10.90.0.1/acessos?q=porta&site=escola'
+[01:41:41] [INFO] using '/root/.local/share/sqlmap/output/results-11122026_0141am.csv' as the CSV results file in multiple targets mode
+[01:41:41] [INFO] testing connection to the target URL
+[01:41:41] [INFO] checking if the target is protected by some kind of WAF/IPS
+you provided a HTTP Cookie header value, while target URL provides its own cookies within HTTP Set-Cookie header which intersect with yours. Do you want to merge them in further requests? [Y/n] Y
+[01:41:41] [CRITICAL] heuristics detected that the target is protected by some kind of WAF/IPS
+are you sure that you want to continue with further target testing? [Y/n] Y
+[01:41:41] [WARNING] please consider usage of tamper scripts (option '--tamper')
+[01:41:41] [INFO] testing if the target URL content is stable
+[01:41:41] [INFO] target URL content is stable
+[01:41:41] [WARNING] heuristic (basic) test shows that GET parameter 'q' might not be injectable
+[01:41:42] [INFO] testing for SQL injection on GET parameter 'q'
+[01:41:42] [INFO] testing 'AND boolean-based blind - WHERE or HAVING clause'
+[01:41:42] [WARNING] reflective value(s) found and filtering out
+[01:41:42] [INFO] testing 'Boolean-based blind - Parameter replace (original value)'
+[01:41:42] [INFO] testing 'Generic inline queries'
+[01:41:42] [INFO] testing 'PostgreSQL AND error-based - WHERE or HAVING clause'
+[01:41:42] [INFO] testing 'PostgreSQL > 8.1 stacked queries (comment)'
+[01:41:42] [WARNING] time-based comparison requires larger statistical model, please wait.......... (done)
+[01:41:42] [INFO] testing 'PostgreSQL > 8.1 AND time-based blind'
+it is recommended to perform only basic UNION tests if there is not at least one other (potential) technique found. Do you want to reduce the number of requests? [Y/n] Y
+[01:41:42] [INFO] testing 'Generic UNION query (NULL) - 1 to 10 columns'
+[01:41:42] [WARNING] GET parameter 'q' does not seem to be injectable
+[01:41:42] [ERROR] all tested parameters do not appear to be injectable. Try to increase values for '--level'/'--risk' options if you wish to perform more tests. If you suspect that there is some kind of protection mechanism involved (e.g. WAF) maybe you could try to use option '--tamper' (e.g. '--tamper=space2comment') and/or switch '--random-agent', skipping to the next target
+[01:41:42] [WARNING] HTTP error codes detected during run:
+403 (Forbidden) - 23 times
+[01:41:42] [INFO] you can find results of scanning in multiple targets mode inside the CSV file '/root/.local/share/sqlmap/output/results-11122026_0141am.csv'

@@ -1,0 +1,107 @@
+[1/1] URL:
+GET http://painel-app:8000/acessos?q=porta&site=escola&dia=2026-11-10
+Cookie: __Host-va=<removido>
+do you want to test this URL? [Y/n/q]
+> Y
+[01:41:34] [INFO] testing URL 'http://painel-app:8000/acessos?q=porta&site=escola&dia=2026-11-10'
+[01:41:34] [WARNING] provided parameters 'q, site, dia' are not inside the Cookie
+[01:41:34] [INFO] using '/root/.local/share/sqlmap/output/results-11122026_0141am.csv' as the CSV results file in multiple targets mode
+[01:41:34] [INFO] testing connection to the target URL
+[01:41:34] [INFO] checking if the target is protected by some kind of WAF/IPS
+you provided a HTTP Cookie header value, while target URL provides its own cookies within HTTP Set-Cookie header which intersect with yours. Do you want to merge them in further requests? [Y/n] Y
+[01:41:34] [INFO] testing if the target URL content is stable
+[01:41:34] [INFO] target URL content is stable
+[01:41:34] [WARNING] heuristic (basic) test shows that GET parameter 'q' might not be injectable
+[01:41:34] [INFO] testing for SQL injection on GET parameter 'q'
+[01:41:34] [INFO] testing 'AND boolean-based blind - WHERE or HAVING clause'
+[01:41:34] [WARNING] reflective value(s) found and filtering out
+[01:41:35] [INFO] testing 'AND boolean-based blind - WHERE or HAVING clause (subquery - comment)'
+[01:41:35] [INFO] testing 'AND boolean-based blind - WHERE or HAVING clause (comment)'
+[01:41:35] [INFO] testing 'Boolean-based blind - Parameter replace (original value)'
+[01:41:35] [INFO] testing 'Boolean-based blind - Parameter replace (DUAL)'
+[01:41:35] [INFO] testing 'Boolean-based blind - Parameter replace (DUAL - original value)'
+[01:41:35] [INFO] testing 'Boolean-based blind - Parameter replace (CASE)'
+[01:41:35] [INFO] testing 'Boolean-based blind - Parameter replace (CASE - original value)'
+[01:41:35] [INFO] testing 'HAVING boolean-based blind - WHERE, GROUP BY clause'
+[01:41:35] [INFO] testing 'Generic inline queries'
+[01:41:35] [INFO] testing 'PostgreSQL AND boolean-based blind - WHERE or HAVING clause (CAST)'
+[01:41:36] [INFO] testing 'PostgreSQL boolean-based blind - Parameter replace'
+[01:41:36] [INFO] testing 'PostgreSQL boolean-based blind - ORDER BY, GROUP BY clause'
+[01:41:36] [INFO] testing 'PostgreSQL boolean-based blind - Stacked queries'
+[01:41:36] [INFO] testing 'PostgreSQL AND error-based - WHERE or HAVING clause'
+[01:41:36] [INFO] testing 'PostgreSQL error-based - Parameter replace'
+[01:41:36] [INFO] testing 'PostgreSQL error-based - ORDER BY, GROUP BY clause'
+[01:41:36] [INFO] testing 'PostgreSQL inline queries'
+[01:41:36] [INFO] testing 'PostgreSQL > 8.1 stacked queries (comment)'
+[01:41:36] [INFO] testing 'PostgreSQL stacked queries (heavy query - comment)'
+[01:41:36] [INFO] testing 'PostgreSQL < 8.2 stacked queries (Glibc - comment)'
+[01:41:36] [INFO] testing 'PostgreSQL > 8.1 AND time-based blind'
+[01:41:36] [INFO] testing 'PostgreSQL AND time-based blind (heavy query)'
+[01:41:36] [INFO] testing 'PostgreSQL > 8.1 time-based blind - Parameter replace'
+[01:41:36] [INFO] testing 'PostgreSQL > 8.1 time-based blind - ORDER BY, GROUP BY clause'
+it is recommended to perform only basic UNION tests if there is not at least one other (potential) technique found. Do you want to reduce the number of requests? [Y/n] Y
+[01:41:36] [INFO] testing 'Generic UNION query (NULL) - 1 to 10 columns'
+[01:41:37] [INFO] testing 'Generic UNION query (random number) - 1 to 10 columns'
+[01:41:37] [WARNING] GET parameter 'q' does not seem to be injectable
+[01:41:37] [WARNING] heuristic (basic) test shows that GET parameter 'site' might not be injectable
+[01:41:37] [INFO] testing for SQL injection on GET parameter 'site'
+[01:41:37] [INFO] testing 'AND boolean-based blind - WHERE or HAVING clause'
+[01:41:37] [INFO] testing 'AND boolean-based blind - WHERE or HAVING clause (subquery - comment)'
+[01:41:37] [INFO] testing 'AND boolean-based blind - WHERE or HAVING clause (comment)'
+[01:41:37] [INFO] testing 'Boolean-based blind - Parameter replace (original value)'
+[01:41:37] [INFO] testing 'Boolean-based blind - Parameter replace (DUAL)'
+[01:41:37] [INFO] testing 'Boolean-based blind - Parameter replace (DUAL - original value)'
+[01:41:37] [INFO] testing 'Boolean-based blind - Parameter replace (CASE)'
+[01:41:37] [INFO] testing 'Boolean-based blind - Parameter replace (CASE - original value)'
+[01:41:37] [INFO] testing 'HAVING boolean-based blind - WHERE, GROUP BY clause'
+[01:41:37] [INFO] testing 'Generic inline queries'
+[01:41:37] [INFO] testing 'PostgreSQL AND boolean-based blind - WHERE or HAVING clause (CAST)'
+[01:41:38] [INFO] testing 'PostgreSQL boolean-based blind - Parameter replace'
+[01:41:38] [INFO] testing 'PostgreSQL boolean-based blind - ORDER BY, GROUP BY clause'
+[01:41:38] [INFO] testing 'PostgreSQL boolean-based blind - Stacked queries'
+[01:41:38] [INFO] testing 'PostgreSQL AND error-based - WHERE or HAVING clause'
+[01:41:38] [INFO] testing 'PostgreSQL error-based - Parameter replace'
+[01:41:38] [INFO] testing 'PostgreSQL error-based - ORDER BY, GROUP BY clause'
+[01:41:38] [INFO] testing 'PostgreSQL inline queries'
+[01:41:38] [INFO] testing 'PostgreSQL > 8.1 stacked queries (comment)'
+[01:41:38] [INFO] testing 'PostgreSQL stacked queries (heavy query - comment)'
+[01:41:38] [INFO] testing 'PostgreSQL < 8.2 stacked queries (Glibc - comment)'
+[01:41:38] [INFO] testing 'PostgreSQL > 8.1 AND time-based blind'
+[01:41:38] [INFO] testing 'PostgreSQL AND time-based blind (heavy query)'
+[01:41:38] [INFO] testing 'PostgreSQL > 8.1 time-based blind - Parameter replace'
+[01:41:38] [INFO] testing 'PostgreSQL > 8.1 time-based blind - ORDER BY, GROUP BY clause'
+[01:41:38] [INFO] testing 'Generic UNION query (NULL) - 1 to 10 columns'
+[01:41:38] [INFO] testing 'Generic UNION query (random number) - 1 to 10 columns'
+[01:41:39] [WARNING] GET parameter 'site' does not seem to be injectable
+[01:41:39] [WARNING] heuristic (basic) test shows that GET parameter 'dia' might not be injectable
+[01:41:39] [INFO] testing for SQL injection on GET parameter 'dia'
+[01:41:39] [INFO] testing 'AND boolean-based blind - WHERE or HAVING clause'
+[01:41:39] [INFO] testing 'AND boolean-based blind - WHERE or HAVING clause (subquery - comment)'
+[01:41:39] [INFO] testing 'AND boolean-based blind - WHERE or HAVING clause (comment)'
+[01:41:39] [INFO] testing 'Boolean-based blind - Parameter replace (original value)'
+[01:41:39] [INFO] testing 'Boolean-based blind - Parameter replace (DUAL)'
+[01:41:39] [INFO] testing 'Boolean-based blind - Parameter replace (DUAL - original value)'
+[01:41:39] [INFO] testing 'Boolean-based blind - Parameter replace (CASE)'
+[01:41:39] [INFO] testing 'Boolean-based blind - Parameter replace (CASE - original value)'
+[01:41:39] [INFO] testing 'HAVING boolean-based blind - WHERE, GROUP BY clause'
+[01:41:39] [INFO] testing 'Generic inline queries'
+[01:41:39] [INFO] testing 'PostgreSQL AND boolean-based blind - WHERE or HAVING clause (CAST)'
+[01:41:40] [INFO] testing 'PostgreSQL boolean-based blind - Parameter replace'
+[01:41:40] [INFO] testing 'PostgreSQL boolean-based blind - ORDER BY, GROUP BY clause'
+[01:41:40] [INFO] testing 'PostgreSQL boolean-based blind - Stacked queries'
+[01:41:40] [INFO] testing 'PostgreSQL AND error-based - WHERE or HAVING clause'
+[01:41:40] [INFO] testing 'PostgreSQL error-based - Parameter replace'
+[01:41:40] [INFO] testing 'PostgreSQL error-based - ORDER BY, GROUP BY clause'
+[01:41:40] [INFO] testing 'PostgreSQL inline queries'
+[01:41:40] [INFO] testing 'PostgreSQL > 8.1 stacked queries (comment)'
+[01:41:40] [INFO] testing 'PostgreSQL stacked queries (heavy query - comment)'
+[01:41:40] [INFO] testing 'PostgreSQL < 8.2 stacked queries (Glibc - comment)'
+[01:41:40] [INFO] testing 'PostgreSQL > 8.1 AND time-based blind'
+[01:41:40] [INFO] testing 'PostgreSQL AND time-based blind (heavy query)'
+[01:41:40] [INFO] testing 'PostgreSQL > 8.1 time-based blind - Parameter replace'
+[01:41:40] [INFO] testing 'PostgreSQL > 8.1 time-based blind - ORDER BY, GROUP BY clause'
+[01:41:40] [INFO] testing 'Generic UNION query (NULL) - 1 to 10 columns'
+[01:41:40] [INFO] testing 'Generic UNION query (random number) - 1 to 10 columns'
+[01:41:40] [WARNING] GET parameter 'dia' does not seem to be injectable
+[01:41:40] [ERROR] all tested parameters do not appear to be injectable. Try to increase values for '--level'/'--risk' options if you wish to perform more tests. If you suspect that there is some kind of protection mechanism involved (e.g. WAF) maybe you could try to use option '--tamper' (e.g. '--tamper=space2comment') and/or switch '--random-agent', skipping to the next target
+[01:41:40] [INFO] you can find results of scanning in multiple targets mode inside the CSV file '/root/.local/share/sqlmap/output/results-11122026_0141am.csv'
