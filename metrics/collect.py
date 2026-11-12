@@ -1,10 +1,11 @@
 """Coletor de métricas do laboratório (RT-22).
 
 Mede, em intervalos, para cada nó: CPU %, memória, I/O de rede (via docker stats),
-e para cada borda: estado do link, profundidade do outbox e nº de alarmes (via /api/status).
-Grava séries em metrics/out/metrics.csv para o relatório.
+para cada borda: estado do link, profundidade do outbox e nº de alarmes (via /api/status)
+e os contadores de bytes de cada interface do nó de borda (fibra, 4G, túneis, LAN) — banda.
+Grava séries em metrics/out/<nome>.csv para o relatório.
 
-Uso: metrics/collect.py [segundos_total] [intervalo]    (padrão: 60 s a cada 5 s)
+Uso: metrics/collect.py [segundos_total] [intervalo] [nome]   (padrão: 60 s a cada 5 s, "metrics")
 """
 from __future__ import annotations
 
@@ -22,6 +23,12 @@ OUT = ROOT / "metrics/out"
 OUT.mkdir(parents=True, exist_ok=True)
 TOTAL = float(sys.argv[1]) if len(sys.argv) > 1 else 60
 STEP = float(sys.argv[2]) if len(sys.argv) > 2 else 5
+NAME = sys.argv[3] if len(sys.argv) > 3 else "metrics"
+# interface do nó de borda -> papel, pelo prefixo do endereço (ver docker-compose.yml)
+IFACE_ROLE = (("172.30.10.", "wan_fibra"), ("172.30.20.", "wan_4g"), ("10.80.", "tunel_fibra"),
+              ("10.81.", "tunel_4g"), ("172.31.", "lan_local"))
+NET_SH = ("for i in $(ls /sys/class/net); do echo c $i $(cat /sys/class/net/$i/statistics/rx_bytes) "
+          "$(cat /sys/class/net/$i/statistics/tx_bytes); done; ip -o -4 addr | awk '{print \"a\",$2,$4}'")
 EDGE_PORTS = {"centro": 8081, "escola": 8082, "ubs": 8083, "horta": 8084, "abrigo": 8085}
 
 
@@ -49,10 +56,30 @@ def edge_status(site: str, port: int) -> dict:
         return {"link": "?", "outbox": "", "alarmes": ""}
 
 
+def edge_ifaces(site: str) -> list[tuple[str, int, int]]:
+    """Contadores (rx, tx) em bytes de cada interface do nó de borda, rotulados pelo papel."""
+    out = subprocess.run(["docker", "exec", f"vilaaurora-wg-{site}-1", "sh", "-c", NET_SH],
+                         capture_output=True, text=True).stdout
+    counters, addr = {}, {}
+    for ln in out.splitlines():
+        p = ln.split()
+        if p and p[0] == "c" and len(p) == 4:
+            counters[p[1]] = (int(p[2]), int(p[3]))
+        elif p and p[0] == "a" and len(p) == 3:
+            addr[p[1]] = p[2]
+    rows = []
+    for iface, ip in addr.items():
+        role = next((r for pfx, r in IFACE_ROLE if ip.startswith(pfx)), "iot_mqtt")  # rede IoT: sub-rede automática
+        if iface != "lo" and iface in counters:
+            rows.append((role, *counters[iface]))
+    return rows
+
+
 def main():
-    f = (OUT / "metrics.csv").open("w", newline="")
+    f = (OUT / f"{NAME}.csv").open("w", newline="")
     w = csv.writer(f)
-    w.writerow(["ts", "tipo", "alvo", "cpu_pct", "mem", "net_io", "link", "outbox", "alarmes"])
+    w.writerow(["ts", "tipo", "alvo", "cpu_pct", "mem", "net_io", "link", "outbox", "alarmes",
+                "iface", "rx_bytes", "tx_bytes"])
     t0 = time.time()
     samples = 0
     while time.time() - t0 < TOTAL:
@@ -62,12 +89,14 @@ def main():
         for site, port in EDGE_PORTS.items():
             s = edge_status(site, port)
             w.writerow([now, "edge", site, "", "", "", s["link"], s["outbox"], s["alarmes"]])
+            for role, rx, tx in edge_ifaces(site):
+                w.writerow([time.time(), "net", site, "", "", "", "", "", "", role, rx, tx])
         f.flush()
         samples += 1
         print(f"\r{samples} amostras ({int(time.time()-t0)}s/{int(TOTAL)}s)", end="", flush=True)
         time.sleep(STEP)
     f.close()
-    print(f"\n{samples} amostras -> {OUT/'metrics.csv'}")
+    print(f"\n{samples} amostras -> {OUT / (NAME + '.csv')}")
 
 
 if __name__ == "__main__":

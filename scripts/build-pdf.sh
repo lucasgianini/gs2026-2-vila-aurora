@@ -39,10 +39,17 @@ csv_md() { # csv_md <arquivo.md> <origem.csv> — CSV (separador ;) como tabela;
 import csv, sys
 rows = list(csv.reader(open(sys.argv[1]), delimiter=";"))
 head, body = rows[0], rows[1:]
-short = lambda k, v: (v[:16] + "…") if k == "sha256" and len(v) > 20 else v
-print("| " + " | ".join(head) + " |"); print("|" + "---|" * len(head))
+width = {"item": 5, "descricao": 22, "origem": 30, "coletado_por": 13, "coletado_em_utc": 14, "sha256": 15, "tamanho_bytes": 9}
+def cell(k, v):
+    if k == "sha256" and len(v) > 20:
+        return v[:12] + "..."
+    if k in ("origem", "coletado_por"):          # caminhos longos: permite quebra de linha no PDF
+        v = v.replace("/", "/\\allowbreak{}").replace("@", "@\\allowbreak{}")
+    return v.replace("|", "/")
+print("| " + " | ".join(h.replace("_", " ") for h in head) + " |")
+print("|" + "|".join("-" * width.get(h, 10) for h in head) + "|")
 for r in body:
-    print("| " + " | ".join(short(k, v).replace("|", "/") for k, v in zip(head, r)) + " |")
+    print("| " + " | ".join(cell(k, v) for k, v in zip(head, r)) + " |")
 print()
 PY
 }
@@ -63,8 +70,20 @@ E3_ANEXOS=("$TMP"/{A,B,C,D,E,F,G,H,I}.md)
 
 # E4
 anexo L1.md "Anexo 1 — Linha do tempo completa";                       corpo L1.md "$CASE/linha-do-tempo.md"
+# colunas da linha do tempo com larguras proporcionais; trechos longos sem espaço (URLs) ganham quebras
+python3 - "$TMP/L1.md" <<'PY'
+import re, sys
+p = sys.argv[1]; out = []
+for ln in open(p):
+    if ln.startswith("|---"):
+        ln = "|---|---------|---------|-----|" + "-" * 60 + "|\n"
+    elif ln.startswith("|"):
+        ln = re.sub(r"\S{46,}", lambda m: " ".join(m.group(0)[i:i + 44] for i in range(0, len(m.group(0)), 44)), ln)
+    out.append(ln)
+open(p, "w").writelines(out)
+PY
 anexo L2.md "Anexo 2 — Cadeia de custódia"
-printf 'Arquivo: `%s` (hash SHA-256 abreviado na tabela; valores completos no Anexo 3).\n\n' "$CASE/cadeia-custodia.csv" >> "$TMP/L2.md"
+printf 'Arquivo: `%s` (hash SHA-256 abreviado nos 12 primeiros caracteres; valores completos no Anexo 3 e no CSV).\n\n' "$CASE/cadeia-custodia.csv" >> "$TMP/L2.md"
 csv_md L2.md "$CASE/cadeia-custodia.csv"
 anexo L3.md "Anexo 3 — Manifesto de integridade (SHA-256) e selo"
 texto L3.md "$CASE/manifesto-sha256.txt"; texto L3.md "$CASE/selo.txt"

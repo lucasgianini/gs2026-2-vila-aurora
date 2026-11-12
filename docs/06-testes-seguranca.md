@@ -23,7 +23,7 @@ Duas versões do painel na mesma base de código: `legado` (vulnerável, só em 
 duas, manualmente e com o sqlmap — **27/27 verificações** (saída completa no Anexo A).
 
 | Teste | Painel legado (antes) | Painel corrigido (depois) |
-|---|---|---|
+|--------------------------|----------------------------------|------------------------------|
 | `x' UNION SELECT ... FROM cadastro.pessoas--` | **vaza** 40 registros de nome/e-mail/telefone (sintéticos) | recusado; 0 registros |
 | `x'` (aspa solta) | devolve o **erro do PostgreSQL** ao usuário | mensagem genérica, sem detalhe do banco |
 | `x'; SELECT pg_sleep(3);--` (empilhado) | **executa**: resposta em 3,4 s | não executa: resposta em 0,25 s |
@@ -32,7 +32,7 @@ duas, manualmente e com o sqlmap — **27/27 verificações** (saída completa n
 A correção é na **causa raiz**, com camadas adicionais; o teste mede cada uma separadamente:
 
 | Camada | Controle | Como foi verificado |
-|---|---|---|
+|--------------|----------------------------------------|----------------------------------|
 | Aplicação (causa raiz) | Consultas parametrizadas — o valor nunca vira SQL (`cloud/painel/app/repo.py`) | sqlmap direto na aplicação, **sem** o WAF na frente: nada injetável |
 | Aplicação | Validação no servidor por lista branca (letras, números, espaço, hífen; até 40 caracteres) | os três payloads recebem a mesma mensagem de orientação |
 | Aplicação | Mensagem de erro genérica | nenhum texto do banco na resposta |
@@ -113,7 +113,7 @@ rede até a borda**, então não aciona atuadores nem que seja convencido a tent
 ### 6.3 Riscos mapeados no OWASP Top 10 para LLM (2025) e no MITRE ATLAS
 
 | OWASP LLM | MITRE ATLAS | Risco neste cenário | Controle | Evidência |
-|---|---|---|---|---|
+|--------------|--------------|--------------------|--------------------------------------|------------|
 | LLM01 Prompt Injection | AML.T0051.000 (direta) · AML.T0051.001 (indireta) | E-mail manda o classificador "responder legítimo" | G1 pré-filtro de instruções, HTML oculto e caracteres invisíveis; G2 e-mail entre delimitadores aleatórios, declarado como dado; G4 injeção detectada nunca resulta em "legítimo" | I01–I04, I08: 8/8 |
 | LLM02 Sensitive Information Disclosure | AML.T0057 LLM Data Leakage | Modelo expor dados pessoais | O LLM só recebe o e-mail em análise; não lê o banco; roda localmente (nada sai da rede) | arquitetura (`docs/02`) |
 | LLM03 Supply Chain | AML.T0010 ML Supply Chain Compromise | Modelo adulterado na origem | Modelo do registro oficial do Ollama, por tag fixa; conferir o digest a cada atualização fica como recomendação | — |
@@ -130,17 +130,33 @@ Identificadores do ATLAS conforme a matriz pública; os nomes das técnicas muda
 ### 6.4 Ameaças potencializadas por IA no cenário (RT-18)
 
 | Ameaça do INC-VA-0712 | Por que a IA piora | Controle técnico | Controle humano |
-|---|---|---|---|
+|------------------|----------------------|------------------------------|----------------------------|
 | Phishing com texto gerado por IA | Sem erros de português e personalizado: os sinais clássicos somem | SPF/DKIM/DMARC (`p=quarantine`), triagem por LLM; banner de remetente externo como recomendação | Cinco regras do plano de conscientização; reporte sem punição |
 | Áudio com voz clonada do secretário | Voz conhecida deixa de ser prova de identidade | MFA e chave WireGuard por pessoa: a senha sozinha não basta; aprovação de segunda pessoa para alto impacto | **Verificação fora de banda** (ligar para o número do cadastro) e **palavra-código** mensal |
 | Domínio parecido com o da prefeitura | Nenhum registro DNS nosso protege um domínio que não é nosso (caso 4 do Anexo C) | Triagem por LLM sinaliza domínio diferente de `vilaaurora.test` | Entrar sempre pelo endereço salvo, nunca pelo link |
 
 ## 7. Resiliência e métricas (RT-22/23 · C7)
 
-- **Teste de caos**: WAN (fibra+4G) fora por >=30 min; as 5 bordas seguiram operando, alarme crítico
-  da câmara fria disparou **sem nuvem**, reconciliação sem perda e sem duplicação ao voltar.
-- **Métricas**: disponibilidade, MTTD/MTTR, tempo de operação autônoma, consumo de CPU/memória/banda
-  do nó de borda. Ver `docs/evidencias/caos/` e `metrics/out/`.
+- **Teste de caos** (Anexo H): WAN (fibra **e** 4G) fora por 30 min nas 5 bordas; todas seguiram operando,
+  o alarme crítico da câmara fria disparou **sem nuvem** e, ao voltar o link, 6.579 leituras foram
+  reconciliadas em 18 s, sem perda e sem duplicação.
+- **Métricas** (Anexo I), todas medidas exceto a energia:
+
+| Indicador do RT-22 | Resultado | Obtido como |
+|----------------------------|--------------------------------------|--------------------------|
+| Disponibilidade da operação local | ≥ 99,9% em ~17 h de laboratório | medido (telemetria no banco) |
+| Disponibilidade da supervisão central | ~95,4–95,8% (as quedas foram provocadas pelos testes) | medido |
+| MTTD / MTTR | 1,4 s / 2,3 s em média (21 respostas automáticas) | medido (SOAR) |
+| Operação autônoma sem internet | ≥ 30 min, sem interrupção local | medido (caos) |
+| Perda de dados na reconciliação | 0 | medido (caos) |
+| CPU / memória do nó de borda | ~0,1% de um núcleo / ~25 MiB | medido |
+| Banda do nó de borda | ~12 kbit/s de subida na fibra; ~5,5 kbit/s no 4G degradado | medido (contadores das interfaces) |
+| Energia do nó de borda | ~3 W por nó (≈ 2,2 kWh/mês) | **estimado** por modelo sobre a CPU medida |
+
+Análise crítica (detalhes no Anexo I): a janela de medição é curta para falar em disponibilidade anual; o
+modo degradado reduziu a subida em cerca de 55%, menos do que o esperado, porque os eventos de estado
+continuam subindo — reduzir sua frequência no 4G é melhoria identificada; e a energia não pôde ser medida
+num laboratório em containers.
 
 ## 8. Como reproduzir
 
