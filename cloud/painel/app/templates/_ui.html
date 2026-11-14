@@ -17,4 +17,10 @@
 
 {% macro nivel(n) %}{% set v = n|nivel %}{{ badge(n ~ ' · ' ~ v[0], v[1]) }}{% endmacro %}
 
-{% macro pares(lista) %}{% if lista %}<ul class="pairs">{% for k, v in lista %}<li{% if v|length > 60 %} title="{{ v }}"{% endif %}><span class="k">{{ k }}</span> {{ v|truncate(60, True, '…', 0) }}</li>{% endfor %}</ul>{% else %}—{% endif %}{% endmacro %}
+{% macro pares(lista) %}{% if lista %}<ul class="pairs">{% for k, v in lista %}<li><span class="k">{{ k }}</span> {{ v|truncate(60, True, '…', 0) }}</li>{% endfor %}</ul>{% else %}—{% endif %}{% endmacro %}
+
+{# Botão "Detalhes" sem JavaScript (details/summary nativo): mostra o registro completo, com os identificadores originais. #}
+{% macro mais(sr, colunas) %}<tr class="more-row"><td colspan="{{ colunas }}"><details class="more"><summary><span class="when-closed">Detalhes</span><span class="when-open">Ocultar detalhes</span><span class="sr"> {{ sr }}</span></summary>
+<dl class="full">{{ caller() }}</dl></details></td></tr>{% endmacro %}
+
+{% macro item(rotulo, valor, codigo=False) %}{% if valor is not none and valor != '' %}<div><dt>{{ rotulo }}</dt><dd>{% if codigo %}<code>{{ valor }}</code>{% else %}{{ valor }}{% endif %}</dd></div>{% endif %}{% endmacro %}

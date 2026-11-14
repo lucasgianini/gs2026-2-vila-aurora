@@ -11,7 +11,7 @@
 
 <h2>Respostas do SOAR</h2>
 <div class="tablewrap"><table><thead><tr><th scope="col">Quando</th><th scope="col">Ação</th><th scope="col">Alvo</th><th scope="col">Risco</th><th scope="col">Situação</th><th scope="col">Resultado / decisão</th><th scope="col">Alerta</th></tr></thead><tbody>
-{% for a in actions %}<tr>
+{% for a in actions %}<tr class="has-more">
 <td class="nowrap">{{ a.ts|quando(True) }}</td><td class="mid">{{ a.action|acao }}</td><td>{{ a.target|equip(True) }}</td>
 <td>{{ ui.risco(a.risk) }}</td><td>{{ ui.situacao(a.status) }}</td>
 <td class="wide">{% if a.status == 'aguardando_aprovacao' and can('aprovar') %}
@@ -20,15 +20,30 @@
     <button name="decisao" value="aprovar" type="submit">Aprovar</button>
     <button name="decisao" value="negar" class="secondary" type="submit">Negar</button></form>
   {% else %}{{ a.result|limpo }}{% if a.decided_by %}<span class="sub">Decidido por {{ a.decided_by }}</span>{% endif %}{% endif %}</td>
-<td class="wide">{{ (a.alerta or '')|truncate(70, True, '…', 0) }}<span class="sub">alerta nº {{ a.alert_id }}</span></td></tr>{% else %}<tr><td colspan="7">Nenhuma ação.</td></tr>{% endfor %}
+<td class="wide">{{ (a.alerta or '')|truncate(70, True, '…', 0) }}<span class="sub">alerta nº {{ a.alert_id }}</span></td></tr>
+{% call ui.mais('da resposta de ' ~ a.ts|quando(True), 7) %}
+  {{ ui.item('Quando', a.ts.strftime('%d/%m/%Y %H:%M:%S')) }}{{ ui.item('Resposta nº', a.id) }}
+  {{ ui.item('Ação (identificador)', a.action, True) }}{{ ui.item('Alvo', a.target, True) }}
+  {{ ui.item('Risco', a.risk) }}{{ ui.item('Situação (identificador)', a.status, True) }}
+  {{ ui.item('Resultado completo', a.result, True) }}{{ ui.item('Decidido por', a.decided_by) }}
+  {{ ui.item('Alerta de origem', '#' ~ a.alert_id ~ ' ' ~ (a.alerta or '')) }}
+{% endcall %}{% else %}<tr><td colspan="7">Nenhuma ação.</td></tr>{% endfor %}
 </tbody></table></div>
 
 <h2>Alertas recentes</h2>
 <div class="tablewrap"><table><thead><tr><th scope="col">#</th><th scope="col">Gerado</th><th scope="col">Detectado em</th><th scope="col">Gravidade</th><th scope="col">Regra</th><th scope="col">Descrição</th><th scope="col">MITRE</th></tr></thead><tbody>
-{% for a in alerts %}<tr>
+{% for a in alerts %}<tr class="has-more">
 <td>{{ a.id }}</td><td class="nowrap">{{ a.ts|quando(True) }}</td>
 <td class="nowrap">{% if a.event_ts %}{{ (a.ts - a.event_ts).total_seconds()|numero }} s{% else %}—{% endif %}</td>
-<td>{{ ui.nivel(a.level) }}</td><td>{{ a.rule_id }}</td><td class="wide">{{ a.description }}</td>
-<td>{{ (a.mitre or [])|join(', ') or '—' }}</td></tr>{% else %}<tr><td colspan="7">Nenhum alerta.</td></tr>{% endfor %}
+<td>{{ ui.nivel(a.level) }}</td><td>{{ a.rule_id }}</td><td class="wide">{{ a.description|truncate(110, True, '…', 0) }}</td>
+<td>{{ (a.mitre or [])|join(', ') or '—' }}</td></tr>
+{% call ui.mais('do alerta nº ' ~ a.id, 7) %}
+  {{ ui.item('Alerta nº', a.id) }}{{ ui.item('Gerado em', a.ts.strftime('%d/%m/%Y %H:%M:%S')) }}
+  {{ ui.item('Evento original em', a.event_ts.strftime('%d/%m/%Y %H:%M:%S') if a.event_ts else None) }}
+  {{ ui.item('Regra', a.rule_id, True) }}{{ ui.item('Nível (0 a 15)', a.level) }}
+  {{ ui.item('Descrição completa', a.description, True) }}
+  {{ ui.item('Grupos', (a.groups or [])|join(', '), True) }}{{ ui.item('MITRE ATT&CK', (a.mitre or [])|join(', ')) }}
+  {{ ui.item('Origem do log', a.location, True) }}
+{% endcall %}{% else %}<tr><td colspan="7">Nenhum alerta.</td></tr>{% endfor %}
 </tbody></table></div>
 {% endblock %}

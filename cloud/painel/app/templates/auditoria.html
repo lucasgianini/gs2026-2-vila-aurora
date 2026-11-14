@@ -1,8 +1,14 @@
 {% extends "base.html" %}{% import "_ui.html" as ui %}{% block title %}Auditoria{% endblock %}
 {% block content %}
 <h1>Trilha de auditoria</h1>
-<p class="help">Registro de quem fez o quê no painel. Só leitura. Valores longos aparecem abreviados; passe o mouse para ver o texto completo.</p>
+<p class="help">Registro de quem fez o quê no painel. Só leitura. Valores longos aparecem abreviados; use o botão <strong>Detalhes</strong> para ver o registro completo.</p>
 <div class="tablewrap"><table class="compact"><thead><tr><th scope="col">Quando (UTC)</th><th scope="col">Quem</th><th scope="col">Ação</th><th scope="col">Alvo</th><th scope="col">IP</th><th scope="col">Detalhes</th></tr></thead><tbody>
-{% for r in rows %}<tr><td class="nowrap">{{ r.ts|quando(True) }}</td><td>{{ ui.pessoa(r.actor) }}</td><td class="nowrap">{{ r.action|acao }}</td><td>{{ (r.target or '—')|espaco|limpo }}</td><td>{{ r.ip or '—' }}</td><td>{{ ui.pares(r.detail|detalhes) }}</td></tr>{% endfor %}
+{% for r in rows %}<tr class="has-more"><td class="nowrap">{{ r.ts|quando(True) }}</td><td>{{ ui.pessoa(r.actor) }}</td><td class="nowrap">{{ r.action|acao }}</td><td>{{ (r.target or '—')|espaco|limpo }}</td><td>{{ r.ip or '—' }}</td><td>{{ ui.pares(r.detail|detalhes) }}</td></tr>
+{% call ui.mais('do registro de ' ~ r.ts|quando(True), 6) %}
+  {{ ui.item('Quando (UTC)', r.ts.strftime('%d/%m/%Y %H:%M:%S')) }}{{ ui.item('Quem', r.actor) }}
+  {{ ui.item('Ação (identificador)', r.action, True) }}{{ ui.item('Alvo', r.target, True) }}{{ ui.item('IP de origem', r.ip) }}
+  {% if r.detail is mapping %}{% for k, v in r.detail.items() %}{{ ui.item(k, v if v != '' else '(vazio)', True) }}{% endfor %}
+  {% elif r.detail %}{{ ui.item('detalhe', r.detail, True) }}{% endif %}
+{% endcall %}{% endfor %}
 </tbody></table></div>
 {% endblock %}
