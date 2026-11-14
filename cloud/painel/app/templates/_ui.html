@@ -17,4 +17,4 @@
 
 {% macro nivel(n) %}{% set v = n|nivel %}{{ badge(n ~ ' · ' ~ v[0], v[1]) }}{% endmacro %}
 
-{% macro pares(lista) %}{% if lista %}<ul class="pairs">{% for k, v in lista %}<li><span class="k">{{ k }}</span> {{ v }}</li>{% endfor %}</ul>{% else %}—{% endif %}{% endmacro %}
+{% macro pares(lista) %}{% if lista %}<ul class="pairs">{% for k, v in lista %}<li{% if v|length > 60 %} title="{{ v }}"{% endif %}><span class="k">{{ k }}</span> {{ v|truncate(60, True, '…', 0) }}</li>{% endfor %}</ul>{% else %}—{% endif %}{% endmacro %}

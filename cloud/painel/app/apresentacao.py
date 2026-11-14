@@ -46,13 +46,14 @@ ACOES = {
     "alarm_ack": "Reconheceu alarme", "command_create": "Solicitou comando",
     "command_approve": "Aprovou comando", "command_deny": "Negou comando",
     "soc_action_aprovada": "Aprovou resposta do SOC", "soc_action_negada": "Negou resposta do SOC",
-    "lock_account": "Bloqueou conta",
+    "lock_account": "Bloqueou conta", "pump_schedule_update": "Alterou a agenda da bomba",
 }
 
 PERFIS = {"operador": "operador", "tecnico": "técnico", "coordenacao": "coordenação", "auditor": "auditor"}
 METODOS = {"rfid": "crachá", "qr": "QR code"}
 DETALHES = {"q": "busca", "site": "espaço", "dia": "dia", "rows": "resultados", "horas": "duração (h)",
-            "action": "ação", "risk": "risco", "cmd_id": "comando"}
+            "action": "ação", "risk": "risco", "cmd_id": "comando",
+            "new": "nova", "old": "anterior"}
 UUID_RE = re.compile(r"\b([0-9a-f]{8})-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b")
 
 
