@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Gera os PDFs de entrega a partir dos Markdown (via pandoc em Docker, sem instalar nada).
-# Uso: scripts/build-pdf.sh [NUM_GRUPO]      ex.: scripts/build-pdf.sh 07   (padrão: XX)
+# Uso: scripts/build-pdf.sh [GRUPO]          ex.: scripts/build-pdf.sh 07   (padrão: XX)
+#      GRUPO numérico vira "G07"; outro texto é usado como está (ex.: RM99921_RM98016).
 #      AUTORES="Nome 1 (RM 000001); Nome 2 (RM 000002)" scripts/build-pdf.sh 07
 #
 # E3 e E4 levam as evidências como anexos (saídas reais dos testes, linha do tempo, custódia),
@@ -9,7 +10,8 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 G="${1:-XX}"
 TURMA="4ECS"
-PFX="GS2026.2_${TURMA}_G${G}"
+if [[ "$G" =~ ^[0-9]+$ || "$G" == XX ]]; then GID="G$G"; else GID="$G"; fi
+PFX="GS2026.2_${TURMA}_${GID}"
 OUT="entrega"
 TMP="$OUT/.tmp"
 CASE="forensics/cases/INC-VA-0712"
@@ -19,8 +21,8 @@ trap 'rm -rf "$TMP"' EXIT
 IMG="pandoc/latex:3.5"
 PD() { docker run --rm -v "$PWD":/data -u "$(id -u):$(id -g)" "$IMG" "$@"; }
 
-AUTOR="Rede Vila Aurora · FIAP GS 2026.2 · Turma $TURMA · Grupo G$G"
-[ -n "${AUTORES:-}" ] && AUTOR="$AUTORES · Turma $TURMA · Grupo G$G"
+AUTOR="Rede Vila Aurora · FIAP GS 2026.2 · Turma $TURMA · Grupo ${GID//_/ }"
+[ -n "${AUTORES:-}" ] && AUTOR="$AUTORES · Turma $TURMA · Grupo ${GID//_/ }"
 
 common=(--pdf-engine=xelatex -V lang=pt-BR -V geometry:margin=1.8cm -V fontsize=11pt
         -V colorlinks=true -V linkcolor=blue --resource-path=.:docs --lua-filter=scripts/pdf-symbols.lua
@@ -96,7 +98,7 @@ build() {  # build <saida> <titulo> <arquivos...>
   PD "$@" -o "/data/$out" "${common[@]}" --metadata=title:"$title" --metadata=author:"$AUTOR"
 }
 
-echo "Gerando PDFs (grupo G$G)..."
+echo "Gerando PDFs (grupo $GID)..."
 rm -f "$OUT"/GS2026.2_*.pdf
 build "${PFX}_E1.pdf" "E1 — Documento de Arquitetura" docs/01-modelo-ameacas.md docs/02-arquitetura.md
 build "${PFX}_E3.pdf" "E3 — Relatório de Testes de Segurança" docs/06-testes-seguranca.md "${E3_ANEXOS[@]}"
