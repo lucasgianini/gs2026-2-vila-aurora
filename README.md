@@ -15,7 +15,7 @@ responder e investigar** incidentes como o INC-VA-0712.
 | ID | Entregável | Onde |
 |---|---|---|
 | E1 | Documento de Arquitetura | `docs/01-modelo-ameacas.md`, `docs/02-arquitetura.md` |
-| E2 | Protótipo Funcional | este repositório (`make up`) |
+| E2 | Protótipo Funcional | este repositório — <https://github.com/lucasgianini/gs2026-2-vila-aurora> (`make up`) |
 | E3 | Relatório de Testes de Segurança | `docs/06-testes-seguranca.md` + `docs/evidencias/` + `tests/` |
 | E4 | Laudo Forense do INC-VA-0712 | `forensics/cases/INC-VA-0712/` |
 

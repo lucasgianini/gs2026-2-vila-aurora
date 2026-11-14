@@ -3,7 +3,8 @@
 Rede Comunitária Vila Aurora · FIAP Global Solution 2026.2 · Cybersecurity.
 
 Este relatório consolida os entregáveis E1, E3 e E4 em seções próprias, cada uma identificada pelo
-ID, conforme permitido pelo enunciado. O protótipo (E2) é o próprio repositório (ver `README.md`).
+ID, conforme permitido pelo enunciado. O protótipo (E2) é o próprio repositório, público em
+<https://github.com/lucasgianini/gs2026-2-vila-aurora> (passo a passo de reprodução no `README.md`).
 
 ## Documentos
 
