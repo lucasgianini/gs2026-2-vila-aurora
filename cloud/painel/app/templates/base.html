@@ -22,7 +22,7 @@
     {% if user %}
     <form class="who" method="post" action="{{ url_for('logout') }}">
       {% if csrf_token %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
-      <span><span class="who-name">{{ user }}</span><span class="who-role">{{ role }}</span></span>
+      <span><span class="who-name">{{ user }}</span><span class="who-role">{{ role|perfil }}</span></span>
       <button class="ghost" type="submit">Sair</button>
     </form>
     {% endif %}

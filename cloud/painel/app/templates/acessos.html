@@ -7,7 +7,7 @@
   <input id="q" name="q" value="{{ q }}" maxlength="{{ 40 if variant != 'legado' else 2000 }}"></div>
   <div><label for="site">Espaço</label>
   <select id="site" name="site"><option value="">Todos</option>
-    {% for s in sites %}<option value="{{ s }}" {{ 'selected' if s == site }}>{{ s }}</option>{% endfor %}</select></div>
+    {% for s in sites %}<option value="{{ s }}" {{ 'selected' if s == site }}>{{ s|espaco }}</option>{% endfor %}</select></div>
   <div><label for="dia">Dia</label>
   <input id="dia" name="dia" type="date" value="{{ dia }}"></div>
   <div><button type="submit">Buscar</button></div>
@@ -15,8 +15,8 @@
 {% if erro %}<p class="erro" role="alert">{{ erro }}</p>{% endif %}
 {% if rows %}
 <div class="tablewrap"><table><caption>{{ rows|length }} resultado(s)</caption>
-<thead><tr><th scope="col">Quando</th><th scope="col">Espaço</th><th scope="col">Equipamento</th><th scope="col">Pessoa (código)</th><th scope="col">Liberado?</th><th scope="col">Método</th></tr></thead><tbody>
-{% for r in rows %}<tr><td>{{ r.ts }}</td><td>{{ r.site }}</td><td>{{ r.device }}</td><td>{{ r.pseudonimo }}</td><td>{{ 'sim' if r.granted else 'não' }}</td><td>{{ r.method }}</td></tr>{% endfor %}
+<thead><tr><th scope="col">Quando</th><th scope="col">Espaço</th><th scope="col">Equipamento</th><th scope="col">Pessoa (código)</th><th scope="col">Liberado?</th><th scope="col">Como abriu</th></tr></thead><tbody>
+{% for r in rows %}<tr><td>{{ r.ts|quando(True) }}</td><td>{{ r.site|espaco }}</td><td>{{ r.device }}</td><td>{{ r.pseudonimo }}</td><td>{{ 'sim' if r.granted else 'não' }}</td><td>{{ r.method|metodo }}</td></tr>{% endfor %}
 </tbody></table></div>
 {% endif %}
 {% endblock %}

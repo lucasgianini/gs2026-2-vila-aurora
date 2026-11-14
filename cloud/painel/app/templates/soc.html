@@ -12,23 +12,23 @@
 <h2>Respostas do SOAR</h2>
 <div class="tablewrap"><table><thead><tr><th scope="col">Quando</th><th scope="col">Ação</th><th scope="col">Alvo</th><th scope="col">Risco</th><th scope="col">Situação</th><th scope="col">Resultado / decisão</th><th scope="col">Alerta</th></tr></thead><tbody>
 {% for a in actions %}<tr>
-<td class="nowrap">{{ a.ts.strftime('%d/%m %H:%M:%S') }}</td><td>{{ a.action }}</td><td>{{ a.target }}</td>
+<td class="nowrap">{{ a.ts|quando(True) }}</td><td class="mid">{{ a.action|acao }}</td><td>{{ a.target|equip(True) }}</td>
 <td>{{ ui.risco(a.risk) }}</td><td>{{ ui.situacao(a.status) }}</td>
-<td>{% if a.status == 'aguardando_aprovacao' and can('aprovar') %}
+<td class="wide">{% if a.status == 'aguardando_aprovacao' and can('aprovar') %}
   <form class="inline" method="post" action="{{ url_for('soc_decidir', aid=a.id) }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <button name="decisao" value="aprovar" type="submit">Aprovar</button>
     <button name="decisao" value="negar" class="secondary" type="submit">Negar</button></form>
-  {% else %}{{ a.result or '' }}{% if a.decided_by %} (decidido por {{ a.decided_by }}){% endif %}{% endif %}</td>
-<td>#{{ a.alert_id }} {{ (a.alerta or '')[:60] }}</td></tr>{% else %}<tr><td colspan="7">Nenhuma ação.</td></tr>{% endfor %}
+  {% else %}{{ a.result|limpo }}{% if a.decided_by %}<span class="sub">Decidido por {{ a.decided_by }}</span>{% endif %}{% endif %}</td>
+<td class="wide">{{ (a.alerta or '')|truncate(70, True, '…', 0) }}<span class="sub">alerta nº {{ a.alert_id }}</span></td></tr>{% else %}<tr><td colspan="7">Nenhuma ação.</td></tr>{% endfor %}
 </tbody></table></div>
 
 <h2>Alertas recentes</h2>
-<div class="tablewrap"><table><thead><tr><th scope="col">#</th><th scope="col">Gerado</th><th scope="col">Atraso (s)</th><th scope="col">Nível</th><th scope="col">Regra</th><th scope="col">Descrição</th><th scope="col">MITRE</th></tr></thead><tbody>
+<div class="tablewrap"><table><thead><tr><th scope="col">#</th><th scope="col">Gerado</th><th scope="col">Detectado em</th><th scope="col">Gravidade</th><th scope="col">Regra</th><th scope="col">Descrição</th><th scope="col">MITRE</th></tr></thead><tbody>
 {% for a in alerts %}<tr>
-<td>{{ a.id }}</td><td class="nowrap">{{ a.ts.strftime('%d/%m %H:%M:%S') }}</td>
-<td>{{ '%.1f' % (a.ts - a.event_ts).total_seconds() if a.event_ts else '—' }}</td>
-<td>{{ ui.badge(a.level, 'bad' if a.level >= 12 else ('warn' if a.level >= 7 else 'neutral')) }}</td><td>{{ a.rule_id }}</td><td>{{ a.description }}</td>
-<td>{{ (a.mitre or [])|join(', ') }}</td></tr>{% else %}<tr><td colspan="7">Nenhum alerta.</td></tr>{% endfor %}
+<td>{{ a.id }}</td><td class="nowrap">{{ a.ts|quando(True) }}</td>
+<td class="nowrap">{% if a.event_ts %}{{ (a.ts - a.event_ts).total_seconds()|numero }} s{% else %}—{% endif %}</td>
+<td>{{ ui.nivel(a.level) }}</td><td>{{ a.rule_id }}</td><td class="wide">{{ a.description }}</td>
+<td>{{ (a.mitre or [])|join(', ') or '—' }}</td></tr>{% else %}<tr><td colspan="7">Nenhum alerta.</td></tr>{% endfor %}
 </tbody></table></div>
 {% endblock %}

@@ -21,6 +21,7 @@ from flask_limiter.util import get_remote_address
 from flask_wtf.csrf import CSRFProtect
 from psycopg.types.json import Jsonb
 
+from . import apresentacao
 from .db import VARIANT, query
 
 LEGADO = VARIANT == "legado"
@@ -77,6 +78,7 @@ def create_app() -> Flask:
         WTF_CSRF_ENABLED=not LEGADO,
     )
     CSRFProtect(app)
+    app.jinja_env.filters.update(apresentacao.FILTROS)
     if LEGADO:   # legado não tinha limitação de tentativas
         rate_limit = lambda fn: fn  # noqa: E731
     else:

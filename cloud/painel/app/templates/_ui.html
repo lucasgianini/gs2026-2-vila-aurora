@@ -12,3 +12,9 @@
    'negada':'negada'}.get(s, s),
   {'aguardando_aprovacao':'warn','pendente':'warn','applied':'ok','executada':'ok','aprovada':'ok',
    'rejected':'bad','falhou':'bad','negada':'bad'}.get(s, 'neutral')) }}{% endmacro %}
+
+{% macro pessoa(s) %}{% set p = s|quem %}{{ p[0] or '—' }}{% if p[1] %}<span class="sub">{{ p[1] }}</span>{% endif %}{% endmacro %}
+
+{% macro nivel(n) %}{% set v = n|nivel %}{{ badge(n ~ ' · ' ~ v[0], v[1]) }}{% endmacro %}
+
+{% macro pares(lista) %}{% if lista %}<ul class="pairs">{% for k, v in lista %}<li><span class="k">{{ k }}</span> {{ v }}</li>{% endfor %}</ul>{% else %}—{% endif %}{% endmacro %}

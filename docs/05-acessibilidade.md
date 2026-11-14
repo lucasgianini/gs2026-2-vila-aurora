@@ -12,12 +12,13 @@ tendo como referência as diretrizes **WCAG 2.1 nível AA** e a linguagem simple
 | Navegação por teclado (2.1.1) | Só HTML nativo (links, formulários, botões); foco visível com contorno amarelo e anel de contraste; página atual marcada com `aria-current` no menu | `style.css` (`:focus-visible`) |
 | Pular para o conteúdo (2.4.1) | Link "Pular para o conteúdo" no topo de cada página | `base.html` (`.skip`) |
 | Rótulos em formulários (1.3.1, 3.3.2) | Todo campo visível tem `<label for=...>` associado (10 rótulos) | todos os `templates/*.html` |
-| Cabeçalhos de tabela (1.3.1) | `<th scope="col">` em todas as tabelas (45 ocorrências) e `<caption>` nos resultados | `index.html`, `acessos.html`, etc. |
+| Cabeçalhos de tabela (1.3.1) | `<th scope="col">` em todas as tabelas (42 ocorrências) e `<caption>` nos resultados | `index.html`, `acessos.html`, etc. |
 | Estrutura semântica (1.3.1) | `header`, `nav`, `main`, `section` com `aria-label`/`aria-labelledby`; hierarquia de `h1`→`h3` | `base.html`, `index.html` |
 | Mensagens de status (4.1.3) | `role="status"` em avisos e `role="alert"` em erros | `base.html`, `acessos.html` |
 | Reflow / responsivo (1.4.10) | `meta viewport`, layout em grade flexível; usável em celular | `style.css` |
 | Entrada de dados (1.3.5) | `autocomplete` apropriado; código MFA com `inputmode="numeric"` e `one-time-code` | `login.html`, `mfa.html` |
 | Não depender só de cor (1.4.1) | Gravidade, risco e situação aparecem como etiqueta com texto, não só cor | `_ui.html`, `index.html`, `comandos.html`, `soc.html` |
+| Linguagem e dados legíveis (3.1) | Identificadores técnicos são traduzidos só na exibição: nomes de espaços e equipamentos, leituras com rótulo e unidade ("Nível 56,8 %" em vez de `level_pct: 56.84`), ações e situações em português. O dado original continua no banco, nos logs e na auditoria; entradas desconhecidas aparecem como vieram | `app/apresentacao.py` |
 
 ## 2. Linguagem simples
 

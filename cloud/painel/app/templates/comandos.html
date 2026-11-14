@@ -5,18 +5,18 @@
 <form class="panel form" method="post">
   {% if csrf_token %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
   <label for="device">Equipamento</label>
-  <select id="device" name="device" required>{% for d in devs %}<option>{{ d }}</option>{% endfor %}</select>
+  <select id="device" name="device" required>{% for d in devs %}<option value="{{ d }}">{{ d|equip(True) }}</option>{% endfor %}</select>
   <label for="action">Ação</label>
   <select id="action" name="action" required>
-    {% for a in ['on','off','safe_mode','lock','unlock_all'] %}<option>{{ a }}</option>{% endfor %}</select>
+    {% for a in ['on','off','safe_mode','lock','unlock_all'] %}<option value="{{ a }}">{{ a|acao }}</option>{% endfor %}</select>
   <div><button type="submit">Solicitar</button></div>
 </form>
 <h2>Últimos comandos</h2>
 <div class="tablewrap"><table><thead><tr><th scope="col">Quando</th><th scope="col">Equipamento</th><th scope="col">Ação</th><th scope="col">Risco</th><th scope="col">Pedido por</th><th scope="col">Aprovado por</th><th scope="col">Situação</th></tr></thead><tbody>
 {% for c in cmds %}<tr>
-<td class="nowrap">{{ c.created_at.strftime('%d/%m %H:%M') }}</td><td>{{ c.device }}</td><td>{{ c.action }}</td>
-<td>{{ ui.risco(c.risk) }}</td><td>{{ c.requested_by }}</td><td>{{ c.approved_by or '—' }}</td>
-<td>{{ ui.situacao(c.status) }}{% if c.result and c.result.reason and c.status=='rejected' %} {{ c.result.reason }}{% endif %}
+<td class="nowrap">{{ c.created_at|quando }}</td><td class="nowrap">{{ c.device|equip(True) }}</td><td class="nowrap">{{ c.action|acao }}</td>
+<td>{{ ui.risco(c.risk) }}</td><td>{{ ui.pessoa(c.requested_by) }}</td><td>{{ c.approved_by or '—' }}</td>
+<td class="wide">{{ ui.situacao(c.status) }}{% if c.result and c.result.reason and c.status=='rejected' %}<span class="sub">Motivo: {{ c.result.reason }}</span>{% endif %}
 {% if c.status=='aguardando_aprovacao' and can('aprovar') and c.requested_by != user %}
 <form class="inline" method="post" action="{{ url_for('aprovar', cid=c.id) }}">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

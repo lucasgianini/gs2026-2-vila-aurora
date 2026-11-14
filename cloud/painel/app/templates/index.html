@@ -16,9 +16,9 @@
 {% if alarmes %}
 <div class="tablewrap"><table><thead><tr><th scope="col">Espaço</th><th scope="col">Gravidade</th><th scope="col">Mensagem</th><th scope="col">Desde</th><th scope="col">Reconhecido</th></tr></thead><tbody>
 {% for a in alarmes %}<tr>
-  <td>{{ a.site|capitalize }}</td><td>{{ ui.sev(a.severity) }}</td><td>{{ a.message }}</td>
-  <td class="nowrap">{{ a.raised_at.strftime('%d/%m %H:%M') }}</td>
-  <td>{% if a.ack_by %}{{ a.ack_by }}{% elif can('reconhecer') or variant=='legado' %}
+  <td>{{ a.site|espaco }}</td><td>{{ ui.sev(a.severity) }}</td><td>{{ a.message }}</td>
+  <td class="nowrap">{{ a.raised_at|quando }}</td>
+  <td>{% if a.ack_by %}por {{ a.ack_by }}{% elif can('reconhecer') or variant=='legado' %}
     <form class="inline" method="post" action="{{ url_for('reconhecer', aid=a.id) }}">
       {% if csrf_token %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
       <button type="submit">Reconhecer</button></form>{% else %}—{% endif %}</td>
@@ -32,17 +32,19 @@
 {% for r in rows %}{% if (agora - r.ts).total_seconds() < 120 %}{% set ns.frescos = ns.frescos + 1 %}{% endif %}{% endfor %}
 <section class="card" aria-labelledby="s-{{ site }}">
   <div class="card-head">
-    <h3 id="s-{{ site }}">{{ site|capitalize }}</h3>
+    <h3 id="s-{{ site }}">{{ site|espaco }}</h3>
     {% if ns.frescos == rows|length %}{{ ui.badge('atualizado', 'ok') }}
     {% elif ns.frescos %}{{ ui.badge('parcialmente atualizado', 'warn') }}
     {% else %}{{ ui.badge('sem leitura recente', 'warn') }}{% endif %}
   </div>
-  <table><thead><tr><th scope="col">Equipamento</th><th scope="col">Leitura</th><th scope="col">Atualizado</th></tr></thead><tbody>
+  <ul class="devs">
   {% for r in rows %}{% set age = (agora - r.ts).total_seconds() %}
-  <tr><td>{{ r.device.split('-',1)[1] }}</td>
-      <td>{% for k,v in r.data.items() if k not in ('device','type','site','seq','ts') %}<span class="kv"><span class="k">{{ k }}:</span> {{ v }}</span> {% endfor %}</td>
-      <td class="nowrap {{ 'ok' if age < 120 else 'stale' }}">{{ 'agora' if age < 120 else ('há %d min' % (age//60)) }}</td></tr>
-  {% endfor %}</tbody></table>
+  <li class="dev">
+    <div class="dev-head"><strong>{{ r.device|equip }}</strong>
+      <span class="{{ 'ok' if age < 120 else 'stale' }}">{{ 'agora' if age < 120 else ('há %d min' % (age//60)) }}</span></div>
+    <dl class="readings">{% for k, v in r.data|leituras %}<div><dt>{{ k }}</dt><dd>{{ v }}</dd></div>{% endfor %}</dl>
+  </li>
+  {% endfor %}</ul>
 </section>
 {% endfor %}
 </div>
