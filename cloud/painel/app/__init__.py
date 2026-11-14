@@ -63,9 +63,10 @@ def log(event: str, severity: str = "info", **kw) -> None:
     LOG.write(json.dumps(rec, ensure_ascii=False, default=str) + "\n")
 
 
-def audit(action: str, target: str | None = None, **detail) -> None:
+def audit(event: str, target: str | None = None, /, **detail) -> None:
+    # parâmetros só posicionais: o detalhe pode ter a chave "action" (ex.: command_create)
     query("INSERT INTO audit.log(actor, action, target, ip, detail) VALUES (%s,%s,%s,%s,%s)",
-          (session.get("user", "anon"), action, target, client_ip(), Jsonb(detail)))
+          (session.get("user", "anon"), event, target, client_ip(), Jsonb(detail)))
 
 
 def create_app() -> Flask:
