@@ -1,13 +1,19 @@
-{% extends "base.html" %}{% block title %}SOC{% endblock %}
+{% extends "base.html" %}{% import "_ui.html" as ui %}{% block title %}SOC{% endblock %}
 {% block content %}
 <h1>Console do SOC</h1>
 <p class="help">Alertas do SIEM e respostas do SOAR. Ações de <strong>baixo risco</strong> são automáticas; ações de <strong>alto impacto</strong> esperam a decisão da coordenação.</p>
+{% set pend = actions|selectattr('status', 'equalto', 'aguardando_aprovacao')|list|length %}
+<ul class="stats" aria-label="Resumo">
+  <li class="stat {{ 'is-bad' if pend }}"><span class="stat-label">Aguardando aprovação</span><span class="stat-value">{{ pend }}</span></li>
+  <li class="stat"><span class="stat-label">Respostas listadas</span><span class="stat-value">{{ actions|length }}</span></li>
+  <li class="stat"><span class="stat-label">Alertas listados</span><span class="stat-value">{{ alerts|length }}</span></li>
+</ul>
 
 <h2>Respostas do SOAR</h2>
-<table><thead><tr><th scope="col">Quando</th><th scope="col">Ação</th><th scope="col">Alvo</th><th scope="col">Risco</th><th scope="col">Situação</th><th scope="col">Resultado / decisão</th><th scope="col">Alerta</th></tr></thead><tbody>
+<div class="tablewrap"><table><thead><tr><th scope="col">Quando</th><th scope="col">Ação</th><th scope="col">Alvo</th><th scope="col">Risco</th><th scope="col">Situação</th><th scope="col">Resultado / decisão</th><th scope="col">Alerta</th></tr></thead><tbody>
 {% for a in actions %}<tr>
-<td>{{ a.ts.strftime('%d/%m %H:%M:%S') }}</td><td>{{ a.action }}</td><td>{{ a.target }}</td>
-<td class="{{ 'sev-high' if a.risk=='alto' }}">{{ a.risk }}</td><td>{{ a.status }}</td>
+<td class="nowrap">{{ a.ts.strftime('%d/%m %H:%M:%S') }}</td><td>{{ a.action }}</td><td>{{ a.target }}</td>
+<td>{{ ui.risco(a.risk) }}</td><td>{{ ui.situacao(a.status) }}</td>
 <td>{% if a.status == 'aguardando_aprovacao' and can('aprovar') %}
   <form class="inline" method="post" action="{{ url_for('soc_decidir', aid=a.id) }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -15,14 +21,14 @@
     <button name="decisao" value="negar" class="secondary" type="submit">Negar</button></form>
   {% else %}{{ a.result or '' }}{% if a.decided_by %} (decidido por {{ a.decided_by }}){% endif %}{% endif %}</td>
 <td>#{{ a.alert_id }} {{ (a.alerta or '')[:60] }}</td></tr>{% else %}<tr><td colspan="7">Nenhuma ação.</td></tr>{% endfor %}
-</tbody></table>
+</tbody></table></div>
 
 <h2>Alertas recentes</h2>
-<table><thead><tr><th scope="col">#</th><th scope="col">Gerado</th><th scope="col">Atraso (s)</th><th scope="col">Nível</th><th scope="col">Regra</th><th scope="col">Descrição</th><th scope="col">MITRE</th></tr></thead><tbody>
+<div class="tablewrap"><table><thead><tr><th scope="col">#</th><th scope="col">Gerado</th><th scope="col">Atraso (s)</th><th scope="col">Nível</th><th scope="col">Regra</th><th scope="col">Descrição</th><th scope="col">MITRE</th></tr></thead><tbody>
 {% for a in alerts %}<tr>
-<td>{{ a.id }}</td><td>{{ a.ts.strftime('%d/%m %H:%M:%S') }}</td>
+<td>{{ a.id }}</td><td class="nowrap">{{ a.ts.strftime('%d/%m %H:%M:%S') }}</td>
 <td>{{ '%.1f' % (a.ts - a.event_ts).total_seconds() if a.event_ts else '—' }}</td>
-<td class="{{ 'sev-high' if a.level >= 12 }}">{{ a.level }}</td><td>{{ a.rule_id }}</td><td>{{ a.description }}</td>
+<td>{{ ui.badge(a.level, 'bad' if a.level >= 12 else ('warn' if a.level >= 7 else 'neutral')) }}</td><td>{{ a.rule_id }}</td><td>{{ a.description }}</td>
 <td>{{ (a.mitre or [])|join(', ') }}</td></tr>{% else %}<tr><td colspan="7">Nenhum alerta.</td></tr>{% endfor %}
-</tbody></table>
+</tbody></table></div>
 {% endblock %}

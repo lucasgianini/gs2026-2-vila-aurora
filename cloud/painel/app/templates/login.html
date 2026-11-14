@@ -1,7 +1,8 @@
 {% extends "base.html" %}{% block title %}Entrar{% endblock %}
 {% block content %}
+<div class="auth">
 <h1>Entrar no painel</h1>
-<form method="post" autocomplete="on">
+<form class="panel" method="post" autocomplete="on">
   {% if csrf_token %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
   <label for="username">Usuário</label>
   <input id="username" name="username" autocomplete="username" required maxlength="32">
@@ -9,5 +10,6 @@
   <input id="password" name="password" type="password" autocomplete="current-password" required>
   <div><button type="submit">Continuar</button></div>
 </form>
-<p class="help">O painel nunca pede sua senha por e-mail ou WhatsApp. Recebeu um pedido "urgente"? Veja a página <strong>Segurança</strong> depois de entrar, ou ligue para a coordenação.</p>
+<p class="help tip">O painel nunca pede sua senha por e-mail ou WhatsApp. Recebeu um pedido "urgente"? Veja a página <strong>Segurança</strong> depois de entrar, ou ligue para a coordenação.</p>
+</div>
 {% endblock %}

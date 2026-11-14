@@ -1,0 +1,14 @@
+{# Componentes visuais reutilizados. A etiqueta sempre traz TEXTO: a cor nunca é o único sinal (WCAG 1.4.1). #}
+{% macro badge(text, kind='neutral') %}<span class="badge b-{{ kind }}">{{ text }}</span>{% endmacro %}
+
+{% macro sev(s) %}{{ badge({'critical':'crítico','high':'alto','medium':'médio','warning':'atenção','low':'baixo','info':'informativo'}.get(s, s),
+  {'critical':'bad','high':'bad','medium':'warn','warning':'warn'}.get(s, 'neutral')) }}{% endmacro %}
+
+{% macro risco(r) %}{{ badge(r, 'bad' if r == 'alto' else 'neutral') }}{% endmacro %}
+
+{% macro situacao(s) %}{{ badge(
+  {'aguardando_aprovacao':'aguardando aprovação','pendente':'pendente','entregue':'entregue','applied':'aplicado',
+   'rejected':'recusado','cancelado':'cancelado','executada':'executada','falhou':'falhou','aprovada':'aprovada',
+   'negada':'negada'}.get(s, s),
+  {'aguardando_aprovacao':'warn','pendente':'warn','applied':'ok','executada':'ok','aprovada':'ok',
+   'rejected':'bad','falhou':'bad','negada':'bad'}.get(s, 'neutral')) }}{% endmacro %}

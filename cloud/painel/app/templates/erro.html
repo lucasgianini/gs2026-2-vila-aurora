@@ -1,2 +1,2 @@
 {% extends "base.html" %}{% block title %}Aviso{% endblock %}
-{% block content %}<h1>Aviso</h1><p>{{ msg }}</p><p><a href="{{ url_for('index') }}">Voltar para a visão geral</a></p>{% endblock %}
+{% block content %}<h1>Aviso</h1><p class="erro" role="alert">{{ msg }}</p><p><a href="{{ url_for('index') }}">Voltar para a visão geral</a></p>{% endblock %}

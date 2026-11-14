@@ -5,27 +5,40 @@
 <title>{% block title %}Painel{% endblock %} – Rede Vila Aurora</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
+{% macro navlink(ep, label) %}<li><a href="{{ url_for(ep) }}"{% if request.endpoint == ep %} aria-current="page"{% endif %}>{{ label }}</a></li>{% endmacro %}
 <body>
 <a class="skip" href="#conteudo">Pular para o conteúdo</a>
 {% if variant == 'legado' %}<div class="banner" role="note">AMBIENTE DE LABORATÓRIO — painel legado vulnerável (reprodução do INC-VA-0712)</div>{% endif %}
-<header>
-  <strong>Rede Vila Aurora · Painel</strong>
+<header class="top"><div class="top-in">
+  <div class="top-row">
+    <div class="brand">
+      <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true" focusable="false">
+        <circle cx="17" cy="17" r="16" fill="none" stroke="currentColor" stroke-width="2"/>
+        <path d="M8 22a9 9 0 0 1 18 0" fill="currentColor"/>
+        <path d="M5 26h24M17 6v3M8.5 9.5l2 2M25.5 9.5l-2 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <span>Rede Vila Aurora<small>Painel de supervisão</small></span>
+    </div>
+    {% if user %}
+    <form class="who" method="post" action="{{ url_for('logout') }}">
+      {% if csrf_token %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
+      <span><span class="who-name">{{ user }}</span><span class="who-role">{{ role }}</span></span>
+      <button class="ghost" type="submit">Sair</button>
+    </form>
+    {% endif %}
+  </div>
   {% if user %}
   <nav aria-label="Menu principal"><ul>
-    <li><a href="{{ url_for('index') }}">Visão geral</a></li>
-    {% if can('comandar') or variant=='legado' %}<li><a href="{{ url_for('comandos') }}">Comandos</a></li>{% endif %}
-    {% if can('agenda') or variant=='legado' %}<li><a href="{{ url_for('agenda') }}">Agenda da bomba</a></li>{% endif %}
-    {% if can('ver_acessos') or variant=='legado' %}<li><a href="{{ url_for('acessos') }}">Histórico de acessos</a></li>{% endif %}
-    {% if can('ver_soc') %}<li><a href="{{ url_for('soc') }}">SOC</a></li>{% endif %}
-    {% if can('ver_auditoria') %}<li><a href="{{ url_for('auditoria') }}">Auditoria</a></li>{% endif %}
-    <li><a href="{{ url_for('seguranca') }}">Segurança</a></li>
+    {{ navlink('index', 'Visão geral') }}
+    {% if can('comandar') or variant=='legado' %}{{ navlink('comandos', 'Comandos') }}{% endif %}
+    {% if can('agenda') or variant=='legado' %}{{ navlink('agenda', 'Agenda da bomba') }}{% endif %}
+    {% if can('ver_acessos') or variant=='legado' %}{{ navlink('acessos', 'Histórico de acessos') }}{% endif %}
+    {% if can('ver_soc') %}{{ navlink('soc', 'SOC') }}{% endif %}
+    {% if can('ver_auditoria') %}{{ navlink('auditoria', 'Auditoria') }}{% endif %}
+    {{ navlink('seguranca', 'Segurança') }}
   </ul></nav>
-  <form class="inline" method="post" action="{{ url_for('logout') }}">
-    {% if csrf_token %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
-    <span>{{ user }} ({{ role }})</span> <button class="secondary" type="submit">Sair</button>
-  </form>
   {% endif %}
-</header>
+</div></header>
 <main id="conteudo" tabindex="-1">
   {% for m in get_flashed_messages() %}<p class="flash" role="status">{{ m }}</p>{% endfor %}
   {% block content %}{% endblock %}

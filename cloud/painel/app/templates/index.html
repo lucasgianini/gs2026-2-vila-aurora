@@ -1,29 +1,47 @@
-{% extends "base.html" %}{% block title %}Visão geral{% endblock %}
+{% extends "base.html" %}{% import "_ui.html" as ui %}{% block title %}Visão geral{% endblock %}
 {% block content %}
+{% set tot = namespace(equip=0, frescos=0) %}
+{% for site, rows in por_site.items() %}{% for r in rows %}{% set tot.equip = tot.equip + 1 %}
+{% if (agora - r.ts).total_seconds() < 120 %}{% set tot.frescos = tot.frescos + 1 %}{% endif %}{% endfor %}{% endfor %}
 <h1>Visão geral</h1>
+<p class="help">Situação dos espaços da rede agora. As leituras chegam das bordas; se a internet cair, cada espaço continua operando sozinho e envia os dados quando o link voltar.</p>
+<ul class="stats" aria-label="Resumo">
+  <li class="stat {{ 'is-bad' if alarmes else 'is-ok' }}"><span class="stat-label">Alarmes ativos</span><span class="stat-value">{{ alarmes|length }}</span></li>
+  <li class="stat"><span class="stat-label">Espaços</span><span class="stat-value">{{ por_site|length }}</span></li>
+  <li class="stat"><span class="stat-label">Equipamentos</span><span class="stat-value">{{ tot.equip }}</span></li>
+  <li class="stat {{ 'is-ok' if tot.equip and tot.frescos == tot.equip }}"><span class="stat-label">Com leitura recente</span><span class="stat-value">{{ tot.frescos }} de {{ tot.equip }}</span></li>
+</ul>
+
 <h2>Alarmes ativos</h2>
 {% if alarmes %}
-<table><thead><tr><th scope="col">Espaço</th><th scope="col">Gravidade</th><th scope="col">Mensagem</th><th scope="col">Desde</th><th scope="col">Reconhecido</th></tr></thead><tbody>
+<div class="tablewrap"><table><thead><tr><th scope="col">Espaço</th><th scope="col">Gravidade</th><th scope="col">Mensagem</th><th scope="col">Desde</th><th scope="col">Reconhecido</th></tr></thead><tbody>
 {% for a in alarmes %}<tr>
-  <td>{{ a.site }}</td><td class="sev-{{ a.severity }}">{{ a.severity }}</td><td>{{ a.message }}</td>
-  <td>{{ a.raised_at.strftime('%d/%m %H:%M') }}</td>
+  <td>{{ a.site|capitalize }}</td><td>{{ ui.sev(a.severity) }}</td><td>{{ a.message }}</td>
+  <td class="nowrap">{{ a.raised_at.strftime('%d/%m %H:%M') }}</td>
   <td>{% if a.ack_by %}{{ a.ack_by }}{% elif can('reconhecer') or variant=='legado' %}
     <form class="inline" method="post" action="{{ url_for('reconhecer', aid=a.id) }}">
       {% if csrf_token %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
       <button type="submit">Reconhecer</button></form>{% else %}—{% endif %}</td>
-</tr>{% endfor %}</tbody></table>
-{% else %}<p class="ok">Nenhum alarme ativo.</p>{% endif %}
+</tr>{% endfor %}</tbody></table></div>
+{% else %}<p class="empty">Nenhum alarme ativo.</p>{% endif %}
 
 <h2>Espaços</h2>
 <div class="grid">
 {% for site, rows in por_site|dictsort %}
+{% set ns = namespace(frescos=0) %}
+{% for r in rows %}{% if (agora - r.ts).total_seconds() < 120 %}{% set ns.frescos = ns.frescos + 1 %}{% endif %}{% endfor %}
 <section class="card" aria-labelledby="s-{{ site }}">
-  <h3 id="s-{{ site }}">{{ site|capitalize }}</h3>
+  <div class="card-head">
+    <h3 id="s-{{ site }}">{{ site|capitalize }}</h3>
+    {% if ns.frescos == rows|length %}{{ ui.badge('atualizado', 'ok') }}
+    {% elif ns.frescos %}{{ ui.badge('parcialmente atualizado', 'warn') }}
+    {% else %}{{ ui.badge('sem leitura recente', 'warn') }}{% endif %}
+  </div>
   <table><thead><tr><th scope="col">Equipamento</th><th scope="col">Leitura</th><th scope="col">Atualizado</th></tr></thead><tbody>
   {% for r in rows %}{% set age = (agora - r.ts).total_seconds() %}
   <tr><td>{{ r.device.split('-',1)[1] }}</td>
-      <td>{% for k,v in r.data.items() if k not in ('device','type','site','seq','ts') %}{{ k }}: {{ v }}{% if not loop.last %}; {% endif %}{% endfor %}</td>
-      <td class="{{ 'ok' if age < 120 else 'stale' }}">{{ 'agora' if age < 120 else ('há %d min' % (age//60)) }}</td></tr>
+      <td>{% for k,v in r.data.items() if k not in ('device','type','site','seq','ts') %}<span class="kv"><span class="k">{{ k }}:</span> {{ v }}</span> {% endfor %}</td>
+      <td class="nowrap {{ 'ok' if age < 120 else 'stale' }}">{{ 'agora' if age < 120 else ('há %d min' % (age//60)) }}</td></tr>
   {% endfor %}</tbody></table>
 </section>
 {% endfor %}

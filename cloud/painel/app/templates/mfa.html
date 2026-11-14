@@ -1,11 +1,13 @@
 {% extends "base.html" %}{% block title %}Código de verificação{% endblock %}
 {% block content %}
+<div class="auth">
 <h1>Código de verificação</h1>
-<p>Abra o aplicativo autenticador no seu celular e digite o código de 6 números.</p>
-<form method="post">
+<p class="help">Abra o aplicativo autenticador no seu celular e digite o código de 6 números.</p>
+<form class="panel" method="post">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
   <label for="code">Código</label>
   <input id="code" name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required>
   <div><button type="submit">Entrar</button></div>
 </form>
+</div>
 {% endblock %}

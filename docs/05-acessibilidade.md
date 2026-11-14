@@ -7,9 +7,9 @@ tendo como referência as diretrizes **WCAG 2.1 nível AA** e a linguagem simple
 
 | Diretriz (WCAG) | Como foi atendida | Onde |
 |---|---|---|
-| Contraste mínimo (1.4.3 AA) | Texto principal **18.9:1**, destaque **8.4:1**, erro **8.1:1**, secundário **9.7:1** (mínimo AA é 4.5:1) | `static/style.css` |
+| Contraste mínimo (1.4.3 AA) | Tema claro: texto principal **16.3:1**, destaque **8.4:1**, erro **8.1:1**, secundário **7.1:1**; etiquetas coloridas ≥ **6.8:1**. Tema escuro (segue `prefers-color-scheme`): todos os pares ≥ **6.3:1** (mínimo AA é 4.5:1). Borda dos campos ≥ **4.7:1** (1.4.11 pede 3:1) | `static/style.css` |
 | Idioma da página (3.1.1) | `<html lang="pt-BR">` | `templates/base.html` |
-| Navegação por teclado (2.1.1) | Só HTML nativo (links, formulários, botões); foco visível com contorno amarelo | `style.css` (`:focus-visible`) |
+| Navegação por teclado (2.1.1) | Só HTML nativo (links, formulários, botões); foco visível com contorno amarelo e anel de contraste; página atual marcada com `aria-current` no menu | `style.css` (`:focus-visible`) |
 | Pular para o conteúdo (2.4.1) | Link "Pular para o conteúdo" no topo de cada página | `base.html` (`.skip`) |
 | Rótulos em formulários (1.3.1, 3.3.2) | Todo campo visível tem `<label for=...>` associado (10 rótulos) | todos os `templates/*.html` |
 | Cabeçalhos de tabela (1.3.1) | `<th scope="col">` em todas as tabelas (45 ocorrências) e `<caption>` nos resultados | `index.html`, `acessos.html`, etc. |
@@ -17,7 +17,7 @@ tendo como referência as diretrizes **WCAG 2.1 nível AA** e a linguagem simple
 | Mensagens de status (4.1.3) | `role="status"` em avisos e `role="alert"` em erros | `base.html`, `acessos.html` |
 | Reflow / responsivo (1.4.10) | `meta viewport`, layout em grade flexível; usável em celular | `style.css` |
 | Entrada de dados (1.3.5) | `autocomplete` apropriado; código MFA com `inputmode="numeric"` e `one-time-code` | `login.html`, `mfa.html` |
-| Não depender só de cor (1.4.1) | Gravidade de alarme vem com texto ("crítico/alto"), não só cor | `index.html` |
+| Não depender só de cor (1.4.1) | Gravidade, risco e situação aparecem como etiqueta com texto, não só cor | `_ui.html`, `index.html`, `comandos.html`, `soc.html` |
 
 ## 2. Linguagem simples
 

@@ -2,10 +2,11 @@
 {% block content %}
 <h1>Agenda da bomba</h1>
 <p class="help">Horários em que a bomba pode encher o reservatório automaticamente. Mínimo de 2 horas por dia. Se o nível ficar abaixo de 20%, a borda liga a bomba mesmo fora da agenda.</p>
-<table><thead><tr><th scope="col">Espaço</th><th scope="col">Janelas</th><th scope="col">Alterado por</th><th scope="col">Quando</th></tr></thead><tbody>
-{% for r in rows %}<tr><td>{{ r.site }}</td><td>{{ r.windows }}</td><td>{{ r.updated_by }}</td><td>{{ r.updated_at.strftime('%d/%m %H:%M') }}</td></tr>{% endfor %}
-</tbody></table>
-<form method="post">
+<div class="tablewrap"><table><thead><tr><th scope="col">Espaço</th><th scope="col">Janelas</th><th scope="col">Alterado por</th><th scope="col">Quando</th></tr></thead><tbody>
+{% for r in rows %}<tr><td>{{ r.site }}</td><td>{{ r.windows }}</td><td>{{ r.updated_by }}</td><td class="nowrap">{{ r.updated_at.strftime('%d/%m %H:%M') }}</td></tr>{% endfor %}
+</tbody></table></div>
+<h2>Alterar agenda</h2>
+<form class="panel form" method="post">
   {% if csrf_token %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
   <label for="site">Espaço</label>
   <select id="site" name="site"><option>escola</option><option>horta</option></select>
