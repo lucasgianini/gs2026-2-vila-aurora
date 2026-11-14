@@ -1,0 +1,6 @@
+{
+  "name": "vila-aurora-video",
+  "private": true,
+  "description": "Gravação automatizada do vídeo de demonstração (Playwright + ffmpeg)",
+  "dependencies": { "playwright": "1.49.1" }
+}
