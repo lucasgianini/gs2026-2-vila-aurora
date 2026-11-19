@@ -11,6 +11,7 @@ cd "$(dirname "$0")/.."
 G="${1:-XX}"
 TURMA="4ECS"
 REPO="${REPO:-https://github.com/lucasgianini/gs2026-2-vila-aurora}"   # E2 — link do repositório, impresso na capa de todos os PDFs
+VIDEO="${VIDEO:-https://youtu.be/4nurz8ffqu4}"                                  # vídeo de demonstração, também na capa
 if [[ "$G" =~ ^[0-9]+$ || "$G" == XX ]]; then GID="G$G"; else GID="$G"; fi
 PFX="GS2026.2_${TURMA}_${GID}"
 OUT="entrega"
@@ -97,7 +98,7 @@ build() {  # build <saida> <titulo> <arquivos...>
   local out="$OUT/$1"; local title="$2"; shift 2
   echo "  -> $out"
   PD "$@" -o "/data/$out" "${common[@]}" --metadata=title:"$title" --metadata=author:"$AUTOR" \
-     --metadata=subtitle:"Repositório (E2): $REPO"
+     --metadata=subtitle:"Repositório (E2): $REPO · Vídeo: $VIDEO"
 }
 
 echo "Gerando PDFs (grupo $GID)..."

@@ -18,6 +18,7 @@ responder e investigar** incidentes como o INC-VA-0712.
 | E2 | Protótipo Funcional | este repositório — <https://github.com/lucasgianini/gs2026-2-vila-aurora> (`make up`) |
 | E3 | Relatório de Testes de Segurança | `docs/06-testes-seguranca.md` + `docs/evidencias/` + `tests/` |
 | E4 | Laudo Forense do INC-VA-0712 | `forensics/cases/INC-VA-0712/` |
+| — | Vídeo de demonstração | <https://youtu.be/4nurz8ffqu4> |
 
 Documentos de apoio: custos (`docs/03`), privacidade/RIPD (`docs/04`), acessibilidade (`docs/05`),
 plano de conscientização (`docs/09`), uso de IA (`docs/07-uso-de-ia.md`). Índice e rastreabilidade
@@ -92,6 +93,8 @@ tests/        testes automatizados reproduzíveis
 ```
 
 ## Vídeo de demonstração
+
+Assista: <https://youtu.be/4nurz8ffqu4>
 
 `scripts/video/gravar-demo.js` (Playwright) grava a demonstração da plataforma de ponta a ponta
 (≈3 min, 1080p60), com legendas indicando o requisito de cada trecho: VPN + MFA (RT-06), login com
