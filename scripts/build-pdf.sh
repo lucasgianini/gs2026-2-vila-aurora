@@ -2,7 +2,7 @@
 # Gera os PDFs de entrega a partir dos Markdown (via pandoc em Docker, sem instalar nada).
 # Uso: scripts/build-pdf.sh [GRUPO]          ex.: scripts/build-pdf.sh 07   (padrão: XX)
 #      GRUPO numérico vira "G07"; outro texto é usado como está (ex.: RM99921_RM98016).
-#      AUTORES="Nome 1 (RM 000001); Nome 2 (RM 000002)" scripts/build-pdf.sh 07
+#      AUTORES="NOME 1 – RM 000001; NOME 2 – RM 000002" scripts/build-pdf.sh 07
 #
 # E3 e E4 levam as evidências como anexos (saídas reais dos testes, linha do tempo, custódia),
 # para que o PDF se sustente sozinho, sem depender de abrir o repositório.
@@ -23,8 +23,13 @@ trap 'rm -rf "$TMP"' EXIT
 IMG="pandoc/latex:3.5"
 PD() { docker run --rm -v "$PWD":/data -u "$(id -u):$(id -g)" "$IMG" "$@"; }
 
-AUTOR="Rede Vila Aurora · FIAP GS 2026.2 · Turma $TURMA · Grupo ${GID//_/ }"
-[ -n "${AUTORES:-}" ] && AUTOR="$AUTORES · Turma $TURMA · Grupo ${GID//_/ }"
+# Capa: um integrante por linha (AUTORES separado por ";") e, por último, turma e grupo.
+AUTOR_META=()
+if [ -n "${AUTORES:-}" ]; then
+  IFS=';' read -ra _AUT <<< "$AUTORES"
+  for a in "${_AUT[@]}"; do a="${a#"${a%%[![:space:]]*}"}"; AUTOR_META+=(--metadata=author:"$a"); done
+fi
+AUTOR_META+=(--metadata=author:"Rede Vila Aurora · FIAP GS 2026.2 · Turma $TURMA · Grupo ${GID//_/ }")
 
 common=(--pdf-engine=xelatex -V lang=pt-BR -V geometry:margin=1.8cm -V fontsize=11pt
         -V colorlinks=true -V linkcolor=blue --resource-path=.:docs --lua-filter=scripts/pdf-symbols.lua
@@ -97,7 +102,7 @@ E4_ANEXOS=("$TMP"/{L1,L2,L3}.md)
 build() {  # build <saida> <titulo> <arquivos...>
   local out="$OUT/$1"; local title="$2"; shift 2
   echo "  -> $out"
-  PD "$@" -o "/data/$out" "${common[@]}" --metadata=title:"$title" --metadata=author:"$AUTOR" \
+  PD "$@" -o "/data/$out" "${common[@]}" --metadata=title:"$title" "${AUTOR_META[@]}" \
      --metadata=subtitle:"Repositório (E2): $REPO · Vídeo: $VIDEO"
 }
 
