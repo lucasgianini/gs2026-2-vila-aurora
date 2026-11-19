@@ -91,6 +91,16 @@ docs/         E1, E3, E4 e documentos de apoio; docs/evidencias/
 tests/        testes automatizados reproduzíveis
 ```
 
+## Vídeo de demonstração
+
+`scripts/video/gravar-demo.js` (Playwright) grava a demonstração da plataforma de ponta a ponta
+(≈3 min, 1080p60), com legendas indicando o requisito de cada trecho: VPN + MFA (RT-06), login com
+TOTP e RBAC (RT-09), visão geral e acessibilidade (RT-01/RT-21), comando de alto impacto aguardando
+aprovação (RT-15), SOC/SOAR e alertas (RT-13/RT-15), auditoria (RT-12), SQLi no painel legado ×
+corrigido + WAF (RT-08) e revogação automática da sessão VPN pelo SOAR. Cada quadro é uma captura
+real do laboratório. A cena final bloqueia `bruno.coord` por 24 h: depois de gravar, desbloquear a
+conta no banco.
+
 ## Ética e legalidade
 
 Conforme a seção 7 do enunciado: toda atividade ofensiva ocorre **somente** no ambiente próprio e
